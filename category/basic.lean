@@ -32,6 +32,13 @@ attribute [functor_norm] seq_assoc pure_seq_eq_map
 @[simp] theorem pure_id'_seq (x : f α) : pure (λx, x) <*> x = x :=
 pure_id_seq x
 
+def mmap₂
+  {α₁ α₂ φ : Type u}
+  (g : α₁ → α₂ → f φ)
+: Π (ma₁ : list α₁) (ma₂: list α₂), f (list φ)
+ | (x :: xs) (y :: ys) := (::) <$> g x y <*> mmap₂ xs ys
+ | _ _ := pure []
+
 @[functor_norm] theorem seq_map_assoc (x : f (α → β)) (g : γ → α) (y : f γ) :
   (x <*> (g <$> y)) = (λ(m:α→β), m ∘ g) <$> x <*> y :=
 begin
@@ -43,6 +50,47 @@ end
 @[functor_norm] theorem map_seq (g : β → γ) (x : f (α → β)) (y : f α) :
   (g <$> (x <*> y)) = ((∘) g) <$> x <*> y :=
 by simp [(pure_seq_eq_map _ _).symm]; simp [seq_assoc]
+
+def mmap₂'  (g : α → β → f γ) : list α → list β → f punit
+| (x :: xs) (y :: ys) := g x y *> mmap₂' xs ys
+| [] _ := pure punit.star
+| _ [] := pure punit.star
+
+private def mpartition_aux (x : α) : ulift bool → list α × list α → list α × list α
+ | ⟨ tt ⟩ (xs,ys) := (x::xs,ys)
+ | ⟨ ff ⟩ (xs,ys) := (xs,x::ys)
+
+def list.mpartition' (g : α → f (ulift bool)) : list α → f (list α × list α)
+ | [] := pure ([],[])
+ | (x :: xs) := mpartition_aux x <$> g x <*> list.mpartition' xs
+
+def list.mpartition {α : Type} {f : Type → Type v} [applicative f] (g : α → f bool) :=
+list.mpartition' (λ x, ulift.up <$> g x)
+
+variables {m : Type u → Type v} [applicative m]
+def lift₂
+  {α₁ α₂ φ : Type u}
+  (f : α₁ → α₂ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) : m φ :=
+f <$> ma₁ <*> ma₂
+
+def lift₃
+  {α₁ α₂ α₃ φ : Type u}
+  (f : α₁ → α₂ → α₃ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃
+
+def lift₄
+  {α₁ α₂ α₃ α₄ φ : Type u}
+  (f : α₁ → α₂ → α₃ → α₄ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄
+
+def lift₅
+  {α₁ α₂ α₃ α₄ α₅ φ : Type u}
+  (f : α₁ → α₂ → α₃ → α₄ → α₅ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) (ma₅ : m α₅) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄ <*> ma₅
 
 end applicative
 
