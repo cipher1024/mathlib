@@ -6,6 +6,8 @@ Author: Simon Hudon
 Standard identity and composition functors
 -/
 
+import category.basic
+
 universe variables u v w u' v' w'
 
 section functor

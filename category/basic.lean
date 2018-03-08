@@ -6,8 +6,6 @@ Authors: Johannes Hölzl
 Extends the theory on functors, applicatives and monads.
 -/
 
-import data.functor -- for norm
-
 universes u v w x y
 variables {α β γ : Type u}
 
@@ -33,40 +31,6 @@ attribute [functor_norm] seq_assoc pure_seq_eq_map
 
 @[simp] theorem pure_id'_seq (x : f α) : pure (λx, x) <*> x = x :=
 pure_id_seq x
-
-lemma pure_seq_eq_map : ∀ {α β : Type u} (g : α → β) (x : f α), pure g <*> x = g <$> x :=
-@applicative.pure_seq_eq_map f _
-
-lemma pure_seq_pure {α β : Type u} (g : α → β) (x : α) :
-  pure g <*> (pure x : f α) = pure (g x) :=
-by simp [pure_seq_eq_map,applicative.map_pure]
-
-open function
-
-lemma map_seq {β γ σ : Type u} (h : γ → σ) (x : f (β → γ)) (y : f β) :
-  h <$> (x <*> y) = (comp h <$> x) <*> y :=
-by rw [← pure_seq_eq_map,← pure_seq_eq_map,
-       applicative.seq_assoc,
-       applicative.map_pure]
-
-lemma seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :
-  x <*> (h <$> y) = (flip comp h) <$> x <*> y :=
-begin
-  rw [← pure_seq_eq_map,← pure_seq_eq_map,
-      applicative.seq_assoc,
-      applicative.seq_pure,
-      pure_seq_eq_map,
-      ← functor.map_comp] ,
-  refl
-end
-
-open applicative functor (map_comp)
-
-attribute [norm] seq_assoc pure_seq_eq_map map_pure seq_map map_seq
-
-lemma map_seq_map {α β γ σ : Type u} (g : α → β → γ) (h : σ → β) (x : f α) (y : f σ) :
-  (g <$> x) <*> (h <$> y) = (flip comp h ∘ g) <$> x <*> y :=
-by simp with norm
 
 def mmap₂
   {α₁ α₂ φ : Type u}

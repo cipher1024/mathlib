@@ -6,18 +6,52 @@ Author: Simon Hudon
 Instances for identity and composition functors
 -/
 
-import data.functor
+import category.functor
 
 universe variables u v w u' v' w'
 
 section lemmas
 
-open function applicative
+open function applicative (hiding pure_seq_eq_map)
 
 variables {α β γ : Type u}
 variables {f : Type u → Type v}
 variables [applicative f]
 variables (g : β → γ)
+
+lemma pure_seq_eq_map : ∀ {α β : Type u} (g : α → β) (x : f α), pure g <*> x = g <$> x :=
+@applicative.pure_seq_eq_map f _
+
+lemma pure_seq_pure {α β : Type u} (g : α → β) (x : α) :
+  pure g <*> (pure x : f α) = pure (g x) :=
+by simp [pure_seq_eq_map,applicative.map_pure]
+
+open function
+
+lemma applicative.map_seq {β γ σ : Type u} (h : γ → σ) (x : f (β → γ)) (y : f β) :
+  h <$> (x <*> y) = (comp h <$> x) <*> y :=
+by rw [← pure_seq_eq_map,← pure_seq_eq_map,
+       applicative.seq_assoc,
+       applicative.map_pure]
+
+lemma applicative.seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :
+  x <*> (h <$> y) = (flip comp h) <$> x <*> y :=
+begin
+  rw [← pure_seq_eq_map,← pure_seq_eq_map,
+      applicative.seq_assoc,
+      applicative.seq_pure,
+      pure_seq_eq_map,
+      ← functor.map_comp] ,
+  refl
+end
+
+open applicative (hiding pure_seq_eq_map) functor (map_comp)
+
+attribute [norm] seq_assoc pure_seq_eq_map map_pure seq_map map_seq
+
+lemma applicative.map_seq_map {α β γ σ : Type u} (g : α → β → γ) (h : σ → β) (x : f α) (y : f σ) :
+  (g <$> x) <*> (h <$> y) = (flip comp h ∘ g) <$> x <*> y :=
+by simp with norm
 
 lemma applicative.map_seq_assoc
   (x : f (α → β)) (y : f α) :

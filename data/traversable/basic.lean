@@ -8,7 +8,7 @@ Type class for traversing collections
 This is a work-in-progress
 -/
 
-import control.applicative
+import category.applicative
 
 open function
 
@@ -28,7 +28,8 @@ instance : has_coe_to_fun (applicative_morphism f g) :=
 { F := λ _, ∀ {α}, f α → g α,
   coe := λ m, m.F }
 
-variables {F : applicative_morphism f g}
+variables {f g}
+variables (F : applicative_morphism f g)
 
 @[norm]
 lemma applicative_morphism.preserves_pure :
@@ -42,9 +43,8 @@ by apply applicative_morphism.preserves_seq'
 @[norm]
 lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α) :
   F (x <$> y) = x <$> F y :=
-by { rw [← applicative.pure_seq_eq_map],
-     simp! [*] with norm,
-     rw applicative.pure_seq_eq_map }
+by { rw [← applicative.pure_seq_eq_map,F.preserves_seq],
+     simp with norm }
 
 open applicative_morphism
 

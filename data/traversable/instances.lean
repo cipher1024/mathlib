@@ -10,7 +10,7 @@ This is a work-in-progress
 
 import .basic
 import category.basic
-import control.applicative
+import category.applicative
 
 universe variables w u v w' u' v'
 
