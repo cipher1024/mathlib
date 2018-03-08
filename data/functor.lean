@@ -1,3 +1,10 @@
+/-
+Copyright (c) 2017 Simon Hudon. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Author: Simon Hudon
+
+Standard identity and composition functors
+-/
 
 universe variables u v w u' v' w'
 
