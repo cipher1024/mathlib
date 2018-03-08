@@ -6,6 +6,8 @@ Authors: Johannes Hölzl
 Extends the theory on functors, applicatives and monads.
 -/
 
+import data.functor -- for norm
+
 universes u v w x y
 variables {α β γ : Type u}
 
@@ -31,6 +33,40 @@ attribute [functor_norm] seq_assoc pure_seq_eq_map
 
 @[simp] theorem pure_id'_seq (x : f α) : pure (λx, x) <*> x = x :=
 pure_id_seq x
+
+lemma pure_seq_eq_map : ∀ {α β : Type u} (g : α → β) (x : f α), pure g <*> x = g <$> x :=
+@applicative.pure_seq_eq_map f _
+
+lemma pure_seq_pure {α β : Type u} (g : α → β) (x : α) :
+  pure g <*> (pure x : f α) = pure (g x) :=
+by simp [pure_seq_eq_map,applicative.map_pure]
+
+open function
+
+lemma map_seq {β γ σ : Type u} (h : γ → σ) (x : f (β → γ)) (y : f β) :
+  h <$> (x <*> y) = (comp h <$> x) <*> y :=
+by rw [← pure_seq_eq_map,← pure_seq_eq_map
+     ,applicative.seq_assoc
+     ,applicative.map_pure]
+
+lemma seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :
+  x <*> (h <$> y) = (flip comp h) <$> x <*> y :=
+begin
+  rw [← pure_seq_eq_map,← pure_seq_eq_map
+     ,applicative.seq_assoc
+     ,applicative.seq_pure
+     ,pure_seq_eq_map
+     ,← functor.map_comp] ,
+  refl
+end
+
+open applicative functor (map_comp)
+
+attribute [norm] seq_assoc pure_seq_eq_map map_pure seq_map map_seq
+
+lemma map_seq_map {α β γ σ : Type u} (g : α → β → γ) (h : σ → β) (x : f α) (y : f σ) :
+  (g <$> x) <*> (h <$> y) = (flip comp h ∘ g) <$> x <*> y :=
+by simp with norm
 
 def mmap₂
   {α₁ α₂ φ : Type u}
@@ -96,17 +132,21 @@ end applicative
 
 -- TODO: setup `functor_norm` for `monad` laws
 section monad
-variables {m : Type u → Type v} [monad m] [is_lawful_monad m]
+variables {m : Type u → Type v} [monad m]
 
 lemma map_bind (x : m α) {g : α → m β} {f : β → γ} : f <$> (x >>= g) = (x >>= λa, f <$> g a) :=
-by simp [bind_assoc, (∘), (bind_pure_comp_eq_map _ _ _).symm]
+by simp [monad.bind_assoc, (∘), (monad.bind_pure_comp_eq_map _ _ _).symm]
 
 lemma seq_bind_eq (x : m α) {g : β → m γ} {f : α → β} : (f <$> x) >>= g = (x >>= g ∘ f) :=
 show bind (f <$> x) g = bind x (g ∘ f),
-by rw [← bind_pure_comp_eq_map, bind_assoc]; simp [pure_bind]
+by rw [←monad.bind_pure_comp_eq_map, monad.bind_assoc]; simp [monad.pure_bind]
 
 lemma seq_eq_bind_map {x : m α} {f : m (α → β)} : f <*> x = (f >>= (<$> x)) :=
-(bind_map_eq_seq m f x).symm
+(monad.bind_map_eq_seq m f x).symm
+
+lemma bind_assoc : ∀ {α β γ : Type u} (x : m α) (f : α → m β) (g : β → m γ),
+  x >>= f >>= g = x >>= λ x, f x >>= g :=
+@monad.bind_assoc m _
 
 end monad
 

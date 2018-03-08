@@ -19,24 +19,37 @@ universe variables w u v w' u' v'
 
 section applicative_morphism
 
-variables {f : Type u → Type v} [applicative f]
-variables {g : Type u → Type w} [applicative g]
-variables (F : ∀ {α : Type u}, f α → g α)
+variables (f : Type u → Type v) [applicative f]
+variables (g : Type u → Type w) [applicative g]
 
-structure applicative_morphism : Prop :=
-  (preserves_pure : ∀ {α : Type u} (x : α), F (pure x) = pure x)
-  (preserves_seq : ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y)
+structure applicative_morphism : Type (max (u+1) v w) :=
+  (F : ∀ {α : Type u}, f α → g α)
+  (preserves_pure' : ∀ {α : Type u} (x : α), F (pure x) = pure x)
+  (preserves_seq' : ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y)
 
-variables {F}
-variables morph : applicative_morphism @F
-include morph
+instance : has_coe_to_fun (applicative_morphism f g) :=
+{ F := λ _, ∀ {α}, f α → g α
+, coe := λ m, m.F }
 
+variables {F : applicative_morphism f g}
+
+@[norm]
+lemma applicative_morphism.preserves_pure :
+  ∀ {α : Type u} (x : α), F (pure x) = pure x :=
+by apply applicative_morphism.preserves_pure'
+@[norm]
+lemma applicative_morphism.preserves_seq :
+  ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y :=
+by apply applicative_morphism.preserves_seq'
+
+@[norm]
 lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α)
 : F (x <$> y) = x <$> F y :=
-by rw [← applicative.pure_seq_eq_map
-      ,morph.preserves_seq
-      ,morph.preserves_pure
-      ,applicative.pure_seq_eq_map]
+by { rw [← applicative.pure_seq_eq_map],
+     simp! [*] with norm,
+     rw applicative.pure_seq_eq_map }
+
+open applicative_morphism
 
 end applicative_morphism
 
@@ -68,8 +81,6 @@ traverse id
 
 end functions
 
-set_option pp.universes true
-
 class traversable (t : Type u → Type v)
 extends has_traverse.{max u v} t, functor t
 : Type (max v u+1) :=
@@ -89,10 +100,9 @@ extends has_traverse.{max u v} t, functor t
                traverse' (has_map.map (has_map.map h) ∘ g) x)
 (morphism : ∀ {G H : Type (max u v) → Type (max u v)}
               [applicative G] [applicative H]
-              {eta : ∀ {α}, G α → H α},
-              applicative_morphism @eta →
+              (eta : applicative_morphism G H),
               ∀ {α β : Type u} (f : α → G (ulift β)) (x : t α),
-              eta (traverse' f x) = traverse' (eta ∘ f) x)
+              eta (traverse' f x) = traverse' (@eta _ ∘ f) x)
 
 lemma down_map {α β : Type u}
   (f : α → β)
@@ -103,6 +113,8 @@ lemma map_identity_mk {α β : Type u}
   (f : α → β)
 : map f ∘ @identity.mk α = @identity.mk β ∘ f :=
 rfl
+
+attribute [norm] traversable.morphism
 
 section traversable
 
@@ -156,19 +168,11 @@ calc
 ... = map f <$> identity.mk x          : by simp [id_traverse]
 ... = ⟨ f <$> x ⟩                      : by refl
 
-variable {eta : Π {α}, G α → H α}
-variable (morph : applicative_morphism @eta)
+variable {eta : applicative_morphism G H}
 
-include morph
-
+@[norm]
 lemma traverse_morphism (x : t α) (h : α → G β)
-: eta (traverse h x) = traverse (eta ∘ h) x :=
-calc
-       eta (traverse h x)
-     = eta (down <$> traverse'.{u u} (λ (x : α), up <$> h x) x) : rfl
- ... = down <$> eta (traverse'.{u u u} (map up ∘ h) x) : by simp [morph.preserves_map]
- ... = down <$> traverse' (eta ∘ (map up ∘ h)) x     : by simp [traversable.morphism.{u u} morph]
- ... = down <$> traverse' (map up ∘ eta ∘ h) x       : by simp [comp,morph.preserves_map]
- ... = traverse (eta ∘ h) x                          : rfl
+: eta (traverse h x) = traverse (@eta _ ∘ h) x :=
+by simp! [traverse,traversable.morphism.{u u} eta,comp] with norm
 
 end traversable

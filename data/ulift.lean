@@ -1,9 +1,9 @@
 
-universes u
-
-namespace ulift
+universes u v
 
 variables {α β γ : Type u}
+
+namespace ulift
 
 def pure (x : α) : ulift α := ⟨ x ⟩
 
@@ -30,3 +30,7 @@ instance : monad ulift :=
 , bind_assoc := @ulift.bind_assoc
 , id_map := @ulift.id_map
 , .. ulift.has_bind }
+
+@[norm]
+lemma ulift.up_eq_pure (x : α) :
+  ulift.up.{v} x = pure x := rfl

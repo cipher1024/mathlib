@@ -14,6 +14,11 @@ lemma functor.map_comp' (f : α → β) (g : β → γ)
 : has_map.map (g ∘ f) = (has_map.map g ∘ has_map.map f : F α → F γ) :=
 by { apply funext, intro, apply functor.map_comp }
 
+@[norm]
+lemma functor.map_map (f : α → β) (g : β → γ) (x : F α) :
+  g <$> f <$> x = (g ∘ f) <$> x :=
+by rw ← functor.map_comp
+
 end functor
 
 structure identity (α : Type u) : Type u :=
@@ -47,9 +52,6 @@ instance identity_functor : functor identity :=
 , id_map := @identity.id_map
 , map_comp := @identity.map_comp }
 
-lemma identity.map_mk {α β : Type v}  (f : α → β) (x : α)
-: f <$> identity.mk x = identity.mk (f x) := rfl
-
 namespace compose
 
 variables {f : Type u → Type u'} {g : Type v → Type u}
@@ -80,6 +82,7 @@ instance functor_compose {f : Type u → Type u'} {g : Type v → Type u}
 , id_map := @compose.id_map f g _ _
 , map_comp := @compose.map_comp f g _ _ }
 
+@[norm]
 lemma compose.map_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}
   [functor f] [functor g]

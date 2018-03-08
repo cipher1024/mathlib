@@ -71,8 +71,9 @@ instance applicative_identity : applicative identity :=
 , seq_pure := @identity.seq_pure
 , seq_assoc := @identity.seq_assoc }
 
-lemma identity.seq_mk {α β : Type v}  (f : α → β) (x : α)
-: identity.mk f <*> identity.mk x = identity.mk (f x) := rfl
+@[norm]
+lemma identity.mk_eq_pure {α : Type v} (x : α)
+: identity.mk x = pure x := rfl
 
 namespace compose
 
@@ -86,15 +87,15 @@ variables {α β γ : Type v}
 def seq : compose f g (α → β) → compose f g α → compose f g β
   | ⟨ h ⟩ ⟨ x ⟩ := ⟨ has_seq.seq <$> h <*> x ⟩
 
-def pure (x : α) : compose f g α :=
-⟨ pure $ pure x ⟩
+instance : has_pure (compose f g) :=
+⟨ λ _ x, ⟨ pure $ pure x ⟩ ⟩
 
 local infix ` <$> ` := map
 local infix ` <*> ` := seq
 
 lemma map_pure (h : α → β) (x : α) : (h <$> pure x : compose f g β) = pure (h x) :=
 begin
-  unfold compose.pure comp compose.map,
+  unfold has_pure.pure comp compose.map,
   apply congr_arg,
   rw [applicative.map_pure,applicative.map_pure],
 end
@@ -103,7 +104,7 @@ lemma seq_pure (h : compose f g (α → β)) (x : α)
 : h <*> pure x = (λ g : α → β, g x) <$> h :=
 begin
   cases h with h,
-  unfold compose.map compose.pure compose.seq comp,
+  unfold compose.map has_pure.pure compose.seq comp,
   apply congr_arg,
   rw [applicative.seq_pure,← functor.map_comp],
   apply congr_fun, apply congr_arg,
@@ -142,7 +143,7 @@ end
 lemma pure_seq_eq_map (h : α → β) : ∀ (x : compose f g α), pure h <*> x = h <$> x
   | ⟨ x ⟩ :=
 begin
-  unfold compose.pure compose.seq compose.map comp,
+  unfold has_pure.pure compose.seq compose.map comp,
   apply congr_arg,
   rw [applicative.map_pure,applicative.pure_seq_eq_map],
   apply congr_fun,
@@ -159,14 +160,15 @@ instance applicative_compose
 , id_map := @compose.id_map f g _ _
 , map_comp := @compose.map_comp f g _ _
 , seq := @compose.seq f g _ _
-, pure := @compose.pure f g _ _
 , pure_seq_eq_map := @compose.pure_seq_eq_map f g _ _
 , map_pure := @compose.map_pure f g _ _
 , seq_pure := @compose.seq_pure f g _ _
-, seq_assoc := @compose.seq_assoc f g _ _ }
+, seq_assoc := @compose.seq_assoc f g _ _
+, ..compose.has_pure }
 
 end compose
 
+@[norm]
 lemma compose.seq_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}
   [applicative f] [applicative g]
