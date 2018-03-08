@@ -17,8 +17,8 @@ variables [functor F]
 lemma functor.id_map' : has_map.map id = (id : F α → F α) :=
 by { apply funext, apply functor.id_map }
 
-lemma functor.map_comp' (f : α → β) (g : β → γ)
-: has_map.map (g ∘ f) = (has_map.map g ∘ has_map.map f : F α → F γ) :=
+lemma functor.map_comp' (f : α → β) (g : β → γ) :
+  has_map.map (g ∘ f) = (has_map.map g ∘ has_map.map f : F α → F γ) :=
 by { apply funext, intro, apply functor.map_comp }
 
 @[norm]
@@ -48,16 +48,16 @@ local infixr <$> := map
 lemma id_map : ∀ (x : identity α), map id x = x
  | ⟨ x ⟩ := rfl
 
-lemma map_comp (f : α → β) (g : β → γ)
-: ∀ (x : identity α), map (g ∘ f) x = g <$> f <$> x
+lemma map_comp (f : α → β) (g : β → γ) :
+  ∀ (x : identity α), map (g ∘ f) x = g <$> f <$> x
  | ⟨ x ⟩ := rfl
 
 end identity
 
 instance identity_functor : functor identity :=
-{ map := @identity.map
-, id_map := @identity.id_map
-, map_comp := @identity.map_comp }
+{ map := @identity.map,
+  id_map := @identity.id_map,
+  map_comp := @identity.map_comp }
 
 namespace compose
 
@@ -73,28 +73,28 @@ local infix ` <$> ` := map
 
 lemma id_map : ∀ (x : compose f g α), map id x = x
   | ⟨ x ⟩ :=
-by { unfold map, rw [functor.id_map',functor.id_map], }
+by { unfold map, rw [functor.id_map', functor.id_map], }
 
 lemma map_comp (g_1 : α → β) (h : β → γ) : ∀ (x : compose f g α),
            map (h ∘ g_1) x = map h (map g_1 x)
   | ⟨ x ⟩ :=
-by { unfold map, rw [functor.map_comp' g_1 h,functor.map_comp], }
+by { unfold map, rw [functor.map_comp' g_1 h, functor.map_comp], }
 
 end compose
 
 instance functor_compose {f : Type u → Type u'} {g : Type v → Type u}
-  [functor f] [functor g]
-: functor (compose f g) :=
-{ map := @compose.map f g _ _
-, id_map := @compose.id_map f g _ _
-, map_comp := @compose.map_comp f g _ _ }
+  [functor f] [functor g] :
+  functor (compose f g) :=
+{ map := @compose.map f g _ _,
+  id_map := @compose.id_map f g _ _,
+  map_comp := @compose.map_comp f g _ _ }
 
 @[norm]
 lemma compose.map_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}
   [functor f] [functor g]
-  (h : α → β) (x : f (g α))
-: h <$> compose.mk x = compose.mk (has_map.map h <$> x) := rfl
+  (h : α → β) (x : f (g α)) :
+  h <$> compose.mk x = compose.mk (has_map.map h <$> x) := rfl
 
 namespace ulift
 

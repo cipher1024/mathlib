@@ -25,8 +25,8 @@ structure applicative_morphism : Type (max (u+1) v w) :=
   (preserves_seq' : ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y)
 
 instance : has_coe_to_fun (applicative_morphism f g) :=
-{ F := λ _, ∀ {α}, f α → g α
-, coe := λ m, m.F }
+{ F := λ _, ∀ {α}, f α → g α,
+  coe := λ m, m.F }
 
 variables {F : applicative_morphism f g}
 
@@ -40,8 +40,8 @@ lemma applicative_morphism.preserves_seq :
 by apply applicative_morphism.preserves_seq'
 
 @[norm]
-lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α)
-: F (x <$> y) = x <$> F y :=
+lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α) :
+  F (x <$> y) = x <$> F y :=
 by { rw [← applicative.pure_seq_eq_map],
      simp! [*] with norm,
      rw applicative.pure_seq_eq_map }
@@ -68,15 +68,15 @@ variables {α β : Type u}
 
 variables {f : Type u → Type u} [applicative f]
 
-def sequence [has_traverse t]
-: t (f α) → f (t α) :=
+def sequence [has_traverse t] :
+  t (f α) → f (t α) :=
 traverse id
 
 end functions
 
 class traversable (t : Type u → Type u)
-extends has_traverse t, functor t
-: Type (u+1) :=
+extends has_traverse t, functor t :
+  Type (u+1) :=
 (id_traverse : ∀ {α : Type u} (x : t α), traverse (identity.mk) x = ⟨ x ⟩ )
 (traverse_comp : ∀ {G H : Type u → Type u}
                [applicative G] [applicative H]
@@ -101,8 +101,8 @@ export traversable
 
 
 lemma map_identity_mk {α β : Type u}
-  (f : α → β)
-: map f ∘ @identity.mk α = @identity.mk β ∘ f :=
+  (f : α → β) :
+  map f ∘ @identity.mk α = @identity.mk β ∘ f :=
 rfl
 
 attribute [norm] traversable.morphism
@@ -119,8 +119,8 @@ variables h : β → H γ
 variables f : β → γ
 
 
-lemma traverse_eq_map_ident {x : t β}
-: traverse (identity.mk ∘ f) x = ⟨ f <$> x ⟩ :=
+lemma traverse_eq_map_ident {x : t β} :
+  traverse (identity.mk ∘ f) x = ⟨ f <$> x ⟩ :=
 calc
       traverse (identity.mk ∘ f) x
     = traverse (map f ∘ identity.mk) x : by simp [map_identity_mk]

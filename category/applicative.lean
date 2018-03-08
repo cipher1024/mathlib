@@ -20,18 +20,17 @@ variables [applicative f]
 variables (g : β → γ)
 
 lemma applicative.map_seq_assoc
-  (x : f (α → β)) (y : f α)
-: @has_map.map f _ _ _ g (x <*> y) = comp g <$> x <*> y :=
-by rw [← applicative.pure_seq_eq_map
-      ,seq_assoc
-      ,map_pure
-      ,applicative.pure_seq_eq_map]
+  (x : f (α → β)) (y : f α) :
+  @has_map.map f _ _ _ g (x <*> y) = comp g <$> x <*> y :=
+by rw [← applicative.pure_seq_eq_map,
+       seq_assoc, map_pure,
+       applicative.pure_seq_eq_map]
 
 lemma applicative.seq_map_comm
-  (x : f (γ → α)) (y : f β)
-: x <*> g <$> y = flip comp g <$> x <*> y :=
+  (x : f (γ → α)) (y : f β) :
+  x <*> g <$> y = flip comp g <$> x <*> y :=
 begin
-  rw [← pure_seq_eq_map _ y,seq_assoc,seq_pure,← functor.map_comp],
+  rw [← pure_seq_eq_map _ y, seq_assoc, seq_pure, ← functor.map_comp],
   refl,
 end
 
@@ -54,8 +53,8 @@ local infix <*> := seq
 lemma pure_seq_eq_map (g : α → β) : ∀ (x : identity α), pure g <*> x = g <$> x
   | ⟨ x ⟩ := rfl
 
-lemma map_pure (g : α → β) (x : α)
-: g <$> pure x = pure (g x) :=
+lemma map_pure (g : α → β) (x : α) :
+  g <$> pure x = pure (g x) :=
 rfl
 
 lemma seq_pure : ∀ (g : identity (α → β)) (x : α),
@@ -69,18 +68,18 @@ lemma seq_assoc : ∀ (x : identity α) (g : identity (α → β)) (h : identity
 end identity
 
 instance applicative_identity : applicative identity :=
-{ map := @identity.map
-, id_map := @identity.id_map
-, pure := @identity.pure
-, seq := @identity.seq
-, pure_seq_eq_map := @identity.pure_seq_eq_map
-, map_pure := @identity.map_pure
-, seq_pure := @identity.seq_pure
-, seq_assoc := @identity.seq_assoc }
+{ map := @identity.map,
+  id_map := @identity.id_map,
+  pure := @identity.pure,
+  seq := @identity.seq,
+  pure_seq_eq_map := @identity.pure_seq_eq_map,
+  map_pure := @identity.map_pure,
+  seq_pure := @identity.seq_pure,
+  seq_assoc := @identity.seq_assoc }
 
 @[norm]
-lemma identity.mk_eq_pure {α : Type v} (x : α)
-: identity.mk x = pure x := rfl
+lemma identity.mk_eq_pure {α : Type v} (x : α) :
+  identity.mk x = pure x := rfl
 
 namespace compose
 
@@ -104,16 +103,16 @@ lemma map_pure (h : α → β) (x : α) : (h <$> pure x : compose f g β) = pure
 begin
   unfold has_pure.pure comp compose.map,
   apply congr_arg,
-  rw [applicative.map_pure,applicative.map_pure],
+  rw [applicative.map_pure, applicative.map_pure],
 end
 
-lemma seq_pure (h : compose f g (α → β)) (x : α)
-: h <*> pure x = (λ g : α → β, g x) <$> h :=
+lemma seq_pure (h : compose f g (α → β)) (x : α) :
+  h <*> pure x = (λ g : α → β, g x) <$> h :=
 begin
   cases h with h,
   unfold compose.map has_pure.pure compose.seq comp,
   apply congr_arg,
-  rw [applicative.seq_pure,← functor.map_comp],
+  rw [applicative.seq_pure, ← functor.map_comp],
   apply congr_fun, apply congr_arg,
   apply funext, intro y,
   unfold comp,
@@ -131,9 +130,9 @@ begin
   apply congr_arg,
   rw [← functor.map_comp],
   rw [← functor.map_comp],
-  rw [← applicative.pure_seq_eq_map has_seq.seq
-     ,applicative.seq_assoc
-     ,applicative.seq_pure _ has_seq.seq],
+  rw [← applicative.pure_seq_eq_map has_seq.seq,
+      applicative.seq_assoc,
+      applicative.seq_pure _ has_seq.seq],
   repeat { rw [← functor.map_comp] },
   rw [applicative.map_seq_assoc has_seq.seq,← functor.map_comp],
   apply congr_fun,
@@ -152,7 +151,7 @@ lemma pure_seq_eq_map (h : α → β) : ∀ (x : compose f g α), pure h <*> x =
 begin
   unfold has_pure.pure compose.seq compose.map comp,
   apply congr_arg,
-  rw [applicative.map_pure,applicative.pure_seq_eq_map],
+  rw [applicative.map_pure, applicative.pure_seq_eq_map],
   apply congr_fun,
   apply congr_arg,
   apply funext, clear x, intro x,
@@ -161,17 +160,17 @@ end
 
 instance applicative_compose
   {f : Type u → Type u'} {g : Type v → Type u}
-  [applicative f] [applicative g]
-: applicative (compose f g) :=
-{ map := @compose.map f g _ _
-, id_map := @compose.id_map f g _ _
-, map_comp := @compose.map_comp f g _ _
-, seq := @compose.seq f g _ _
-, pure_seq_eq_map := @compose.pure_seq_eq_map f g _ _
-, map_pure := @compose.map_pure f g _ _
-, seq_pure := @compose.seq_pure f g _ _
-, seq_assoc := @compose.seq_assoc f g _ _
-, ..compose.has_pure }
+  [applicative f] [applicative g] :
+  applicative (compose f g) :=
+{ map := @compose.map f g _ _,
+  id_map := @compose.id_map f g _ _,
+  map_comp := @compose.map_comp f g _ _,
+  seq := @compose.seq f g _ _,
+  pure_seq_eq_map := @compose.pure_seq_eq_map f g _ _,
+  map_pure := @compose.map_pure f g _ _,
+  seq_pure := @compose.seq_pure f g _ _,
+  seq_assoc := @compose.seq_assoc f g _ _,
+  ..compose.has_pure }
 
 end compose
 
@@ -179,5 +178,5 @@ end compose
 lemma compose.seq_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}
   [applicative f] [applicative g]
-  (h : f (g (α → β))) (x : f (g α))
-: compose.mk h <*> compose.mk x = compose.mk (has_seq.seq <$> h <*> x) := rfl
+  (h : f (g (α → β))) (x : f (g α)) :
+  compose.mk h <*> compose.mk x = compose.mk (has_seq.seq <$> h <*> x) := rfl

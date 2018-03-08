@@ -45,18 +45,18 @@ open function
 
 lemma map_seq {β γ σ : Type u} (h : γ → σ) (x : f (β → γ)) (y : f β) :
   h <$> (x <*> y) = (comp h <$> x) <*> y :=
-by rw [← pure_seq_eq_map,← pure_seq_eq_map
-     ,applicative.seq_assoc
-     ,applicative.map_pure]
+by rw [← pure_seq_eq_map,← pure_seq_eq_map,
+       applicative.seq_assoc,
+       applicative.map_pure]
 
 lemma seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :
   x <*> (h <$> y) = (flip comp h) <$> x <*> y :=
 begin
-  rw [← pure_seq_eq_map,← pure_seq_eq_map
-     ,applicative.seq_assoc
-     ,applicative.seq_pure
-     ,pure_seq_eq_map
-     ,← functor.map_comp] ,
+  rw [← pure_seq_eq_map,← pure_seq_eq_map,
+      applicative.seq_assoc,
+      applicative.seq_pure,
+      pure_seq_eq_map,
+      ← functor.map_comp] ,
   refl
 end
 
@@ -70,8 +70,8 @@ by simp with norm
 
 def mmap₂
   {α₁ α₂ φ : Type u}
-  (g : α₁ → α₂ → f φ)
-: Π (ma₁ : list α₁) (ma₂: list α₂), f (list φ)
+  (g : α₁ → α₂ → f φ) :
+  Π (ma₁ : list α₁) (ma₂: list α₂), f (list φ)
  | (x :: xs) (y :: ys) := (::) <$> g x y <*> mmap₂ xs ys
  | _ _ := pure []
 
@@ -109,24 +109,6 @@ def lift₂
   (f : α₁ → α₂ → φ)
   (ma₁ : m α₁) (ma₂: m α₂) : m φ :=
 f <$> ma₁ <*> ma₂
-
-def lift₃
-  {α₁ α₂ α₃ φ : Type u}
-  (f : α₁ → α₂ → α₃ → φ)
-  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) : m φ :=
-f <$> ma₁ <*> ma₂ <*> ma₃
-
-def lift₄
-  {α₁ α₂ α₃ α₄ φ : Type u}
-  (f : α₁ → α₂ → α₃ → α₄ → φ)
-  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) : m φ :=
-f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄
-
-def lift₅
-  {α₁ α₂ α₃ α₄ α₅ φ : Type u}
-  (f : α₁ → α₂ → α₃ → α₄ → α₅ → φ)
-  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) (ma₅ : m α₅) : m φ :=
-f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄ <*> ma₅
 
 end applicative
 

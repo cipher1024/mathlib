@@ -7,23 +7,7 @@ Automation to construct `traversable` instances
 -/
 
 import .basic
-
-universes u v w w'
-
-section list
-variables {α : Type u} {β : Type v} {γ : Type w}
-variables {m : Type w → Type w'}
-variables [applicative m]
-
-def mzip_with (f : α → β → m γ) : list α → list β → m (list γ)
- | (x :: xs) (y :: ys) := (::) <$> f x y <*> mzip_with xs ys
- | _ _ := pure []
-
-def mzip_with' (f : α → β → m γ) : list α → list β → m punit
- | (x :: xs) (y :: ys) := f x y *> mzip_with' xs ys
- | _ _ := pure punit.star
-
-end list
+import category.basic
 
 namespace tactic.interactive
 
@@ -68,6 +52,8 @@ do applyc `compose.run,
    r ← seq_apply_constructor (filter_map id args') constr',
    () <$ tactic.apply r
 
+open applicative
+
 meta def derive_traverse : tactic unit :=
 do `(has_traverse %%f) ← target | failed,
    env ← get_env,
@@ -81,8 +67,8 @@ do `(has_traverse %%f) ← target | failed,
    α ← get_local `α,
    β ← get_local `β,
    m ← get_local `m,
-   () <$ mzip_with'
-      (λ (c : name) (x : _ × _ × _), solve1 (traverse_constructor c n f α x.2.1))
+   () <$ mmap₂'
+      (λ (c : name) (x : name × list expr × _), solve1 (traverse_constructor c n f α x.2.1))
       cs xs
 
 end tactic.interactive
