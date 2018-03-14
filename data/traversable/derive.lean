@@ -8,23 +8,28 @@ Automation to construct `traversable` instances
 
 import .basic
 import category.basic
+import tactic.basic
 
 namespace tactic.interactive
 
 open tactic list monad functor
 
-meta def traverse_field (n : name) (cl' f v e : expr) : tactic (option expr) :=
-do `(compose %%cl ulift) ← return cl' | failed,
-   t ← infer_type e >>= whnf,
+def succeeds {m : Type* → Type*} [alternative m] {α} (cmd : m α) : m bool :=
+(tt <$ cmd) <|> pure ff
+
+meta def traverse_field (n : name) (cl f v e : expr) : tactic (option expr) :=
+do t ← infer_type e >>= whnf,
    if t.get_app_fn.const_name = n
    then return none
    else if v.occurs t
-   then   (is_def_eq t v >> some <$> to_expr ``(compose.mk %%(expr.app f e)) )
-      <|> (guard (¬ v.occurs (t.app_fn)) >> some <$> to_expr ``(compose.mk (has_traverse.traverse' %%f %%e)))
-      <|> fail format!"type {t} is not traversable with respect to variable {v}"
+   then   mcond (succeeds $ is_def_eq t v)
+                (pure $ some $ expr.app f e)
+                (if ¬ v.occurs (t.app_fn)
+                    then some <$> to_expr ``(compose.mk (has_traverse.traverse' %%f %%e))
+                    else fail format!"type {t} is not traversable with respect to variable {v}")
    else
          (is_def_eq t.app_fn cl >> some <$> to_expr ``(compose.mk %%e))
-     <|> some <$> to_expr ``(@pure %%cl' _ _ %%e)
+     <|> some <$> to_expr ``(@pure %%cl _ _ %%e)
 
 meta def seq_apply_constructor : list expr → expr → tactic expr
  | (x :: xs) e := to_expr ``(%%e <*> %%x) >>= seq_apply_constructor xs
@@ -44,8 +49,7 @@ do c ← mk_const n,
    fill_implicit_arg' c t
 
 meta def traverse_constructor (c n : name) (f v : expr) (args : list expr) : tactic unit :=
-do applyc `compose.run,
-   g ← target,
+do g ← target,
    args' ← mmap (traverse_field n g.app_fn f v) args,
    constr ← fill_implicit_arg c,
    constr' ← to_expr ``(@pure %%(g.app_fn) _ _ %%constr),
@@ -61,6 +65,7 @@ do `(has_traverse %%f) ← target | failed,
    let cs := env.constructors_of n,
    constructor,
    `[intros m _ α β f x],
+   reset_instance_cache,
    x ← get_local `x,
    xs ← tactic.induction x,
    f ← get_local `f,
