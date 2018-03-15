@@ -97,8 +97,7 @@ extends has_traverse t, functor t :
               ∀ {α β : Type u} (f : α → G β) (x : t α),
               eta (traverse f x) = traverse (@eta _ ∘ f) x)
 
-export traversable
-
+open traversable
 
 lemma map_identity_mk {α β : Type u}
   (f : α → β) :
