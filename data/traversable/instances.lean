@@ -18,17 +18,20 @@ open function
 
 section identity
 
-open function has_map
+open function functor
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
-variables {α β γ : Type u}
 
-def identity.traverse (g : α → f β) : identity α → f (identity β)
+def identity.traverse {α β : Type u} (g : α → f β) : identity α → f (identity β)
  | ⟨ x ⟩ := (λ x : β, ⟨ x ⟩) <$> g x
+
 
 instance : has_traverse identity :=
 ⟨ @identity.traverse ⟩
+
+variables [is_lawful_applicative f] [is_lawful_applicative f']
+variables {α β γ : Type u}
 
 lemma identity.traverse_mk (g : α → f β) (x : α) :
   identity.traverse g ⟨ x ⟩ = identity.mk <$> (g x) :=
@@ -74,15 +77,17 @@ instance : traversable identity :=
 
 section option
 
-open function has_map
+open function functor
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
-variables {α β γ : Type u}
 
-def option.traverse (g : α → f β) : option α → f (option β)
+def option.traverse {α β : Type u} (g : α → f β) : option α → f (option β)
  | none := pure none
  | (some x) := some <$> g x
+
+variables [is_lawful_applicative f] [is_lawful_applicative f']
+variables {α β γ : Type u}
 
 lemma option.traverse_mk (g : α → f β) (x : α) :
   option.traverse g (some x) = some <$> (g x) :=
@@ -129,7 +134,7 @@ variables {f : Type u → Type v}
 variables [applicative f]
 variables {α β : Type u}
 
-open applicative has_map
+open applicative functor
 open list (cons)
 
 def list.traverse (g : α → f β) : list α → f (list β)
@@ -142,23 +147,20 @@ section list
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
+variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
 
-open applicative has_map
+open applicative functor
 open list (cons)
 
 lemma list.id_traverse (xs : list α) :
   list.traverse identity.mk xs = ⟨ xs ⟩ :=
 by induction xs ; simp! [*] with norm ; refl
 
-lemma list.traverse_comp (g : α → f β) (h : β → f' γ) :
-  ∀ (x : list α),
-        list.traverse (compose.mk ∘ map h ∘ g) x =
-        compose.mk (list.traverse h <$> list.traverse g x) :=
-begin
-  intro x, induction x ;
-  simp! [*] with norm ; refl,
-end
+lemma list.traverse_comp (g : α → f β) (h : β → f' γ) (x : list α) :
+  list.traverse (compose.mk ∘ map h ∘ g) x =
+  compose.mk (list.traverse h <$> list.traverse g x) :=
+by induction x ; simp! [*] with norm ; refl
 
 lemma list.map_traverse {α β γ : Type u} (g : α → f' β) (f : β → γ)
   (x : list α) :

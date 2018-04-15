@@ -16,8 +16,8 @@ universe variables w u v w' u' v'
 
 section applicative_morphism
 
-variables (f : Type u → Type v) [applicative f]
-variables (g : Type u → Type w) [applicative g]
+variables (f : Type u → Type v) [applicative f] [is_lawful_applicative f]
+variables (g : Type u → Type w) [applicative g] [is_lawful_applicative g]
 
 structure applicative_morphism : Type (max (u+1) v w) :=
   (F : ∀ {α : Type u}, f α → g α)
@@ -43,7 +43,7 @@ by apply applicative_morphism.preserves_seq'
 @[norm]
 lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α) :
   F (x <$> y) = x <$> F y :=
-by { rw [← applicative.pure_seq_eq_map,F.preserves_seq],
+by { rw [← pure_seq_eq_map,F.preserves_seq],
      simp with norm }
 
 open applicative_morphism
@@ -55,7 +55,7 @@ class has_traverse (t : Type u → Type u) :=
    {α β : Type u},
    (α → m β) → t α → m (t β))
 
-open has_map
+open functor
 
 export has_traverse (traverse)
 
@@ -80,19 +80,21 @@ extends has_traverse t, functor t :
 (id_traverse : ∀ {α : Type u} (x : t α), traverse (identity.mk) x = ⟨ x ⟩ )
 (traverse_comp : ∀ {G H : Type u → Type u}
                [applicative G] [applicative H]
+               [is_lawful_applicative G] [is_lawful_applicative H]
                {α β γ : Type u}
                (g : α → G β) (h : β → H γ) (x : t α),
-   traverse (compose.mk ∘ has_map.map h ∘ g) x =
+   traverse (compose.mk ∘ functor.map h ∘ g) x =
    ⟨ traverse h <$> traverse g x ⟩)
 (map_traverse : ∀ {G : Type u → Type u}
-               [applicative G]
+               [applicative G] [is_lawful_applicative G]
                {α β γ : Type u}
                (g : α → G β) (h : β → γ)
                (x : t α),
-               has_map.map h <$> traverse g x =
-               traverse (has_map.map h ∘ g) x)
+               functor.map h <$> traverse g x =
+               traverse (functor.map h ∘ g) x)
 (morphism : ∀ {G H : Type u → Type u}
               [applicative G] [applicative H]
+              [is_lawful_applicative G] [is_lawful_applicative H]
               (eta : applicative_morphism G H),
               ∀ {α β : Type u} (f : α → G β) (x : t α),
               eta (traverse f x) = traverse (@eta _ ∘ f) x)
@@ -111,7 +113,8 @@ section traversable
 variable {t : Type u → Type u}
 variable [traversable t]
 variables {G H : Type u → Type u}
-variables [applicative G] [applicative H]
+variables [applicative G] [is_lawful_applicative G]
+variables [applicative H] [is_lawful_applicative H]
 variables {α β γ : Type u}
 variables g : α → G β
 variables h : β → H γ
