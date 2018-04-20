@@ -72,45 +72,42 @@ open function
 
 variables {α : Type u} {β : Type v} {γ : Type u'}
 
-def pure : α → identity α := identity.mk
+def pure : α → id α := id
 
-def seq : identity (α → β) → identity α → identity β
-  | ⟨ f ⟩ ⟨ x ⟩ := ⟨ f x ⟩
+def seq : id (α → β) → id α → id β
+  | f x := f x
 
 local infix <$> := map
 local infix <*> := seq
 
-lemma pure_seq_eq_map (g : α → β) : ∀ (x : identity α), pure g <*> x = g <$> x
-  | ⟨ x ⟩ := rfl
+lemma pure_seq_eq_map (g : α → β) : ∀ (x : id α), pure g <*> x = g <$> x
+  | x := rfl
 
 lemma map_pure (g : α → β) (x : α) :
   g <$> pure x = pure (g x) :=
 rfl
 
-lemma seq_pure : ∀ (g : identity (α → β)) (x : α),
+lemma seq_pure : ∀ (g : id (α → β)) (x : α),
   g <*> pure x = (λ g : α → β, g x) <$> g
-  | ⟨ g ⟩ x := rfl
+  | g x := rfl
 
-lemma seq_assoc : ∀ (x : identity α) (g : identity (α → β)) (h : identity (β → γ)),
+lemma seq_assoc : ∀ (x : id α) (g : id (α → β)) (h : id (β → γ)),
   h <*> (g <*> x) = (@comp α β γ <$> h) <*> g <*> x
-| ⟨ x ⟩ ⟨ g ⟩ ⟨ h ⟩ := rfl
+| x g h := rfl
 
 end identity
 
-instance applicative_identity : applicative identity :=
+instance applicative_id : applicative id :=
 { map := @identity.map,
   pure := @identity.pure,
   seq := @identity.seq }
-instance lawful_applicative_identity : is_lawful_applicative identity :=
+instance lawful_applicative_id : is_lawful_applicative id :=
 { id_map := @identity.id_map,
   pure_seq_eq_map := @identity.pure_seq_eq_map,
   map_pure := @identity.map_pure,
   seq_pure := @identity.seq_pure,
   seq_assoc := @identity.seq_assoc }
 
-@[norm]
-lemma identity.mk_eq_pure {α : Type v} (x : α) :
-  identity.mk x = pure x := rfl
 
 namespace compose
 

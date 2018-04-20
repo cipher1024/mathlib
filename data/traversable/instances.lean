@@ -23,54 +23,51 @@ open function functor
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
 
-def identity.traverse {α β : Type u} (g : α → f β) : identity α → f (identity β)
- | ⟨ x ⟩ := (λ x : β, ⟨ x ⟩) <$> g x
+def identity.traverse {α β : Type u} (g : α → f β) : id α → f (id β) :=
+map id ∘ g
 
 
-instance : has_traverse identity :=
+instance : traversable id :=
 ⟨ @identity.traverse ⟩
 
 variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
 
 lemma identity.traverse_mk (g : α → f β) (x : α) :
-  identity.traverse g ⟨ x ⟩ = identity.mk <$> (g x) :=
+  identity.traverse g (identity.mk x) = identity.mk <$> (g x) :=
 rfl
 
 lemma identity.traverse_mk' (g : α → f β) :
   identity.traverse g ∘ identity.mk = map identity.mk ∘ g :=
 rfl
 
-lemma identity.id_traverse (x : identity α) :
+lemma identity.id_traverse (x : id α) :
   identity.traverse identity.mk x = identity.mk x :=
-by { cases x, unfold identity.traverse, refl }
-
+by refl
 lemma identity.traverse_comp (g : α → f β) (h : β → f' γ) :
-  ∀ (x : identity α),
+  ∀ (x : id α),
         identity.traverse (compose.mk ∘ map h ∘ g) x =
         compose.mk (identity.traverse h <$> identity.traverse g x)
-  | ⟨ x ⟩ :=
-by simp! with norm; refl
+  | x :=
+by simp! [identity.traverse,id_map'] with norm
 
 lemma identity.map_traverse
    (g : α → f' β) (f : β → γ)
-   (x : identity α) :
+   (x : id α) :
   map f <$> identity.traverse g x = identity.traverse (map f ∘ g) x :=
-by cases x with x; simp! with norm; refl
+by simp [map,identity.map,identity.traverse,id_map] with norm
 
 variable (eta : applicative_morphism f f')
 
 lemma identity.morphism {α β : Type u}
-  (F : α → f β) (x : identity α) :
+  (F : α → f β) (x : id α) :
   eta (identity.traverse F x) = identity.traverse (@eta _ ∘ F) x :=
-by cases x with x; simp! with norm
+by simp! [identity.traverse] with norm; refl
 
 end identity
 
-instance : traversable identity :=
-{ to_functor := (identity_functor : functor identity),
-  traverse := @identity.traverse,
-  id_traverse := λ α x, @identity.id_traverse α x,
+instance : is_lawful_traversable id :=
+{ id_traverse := λ α x, @identity.id_traverse α x,
   traverse_comp := @identity.traverse_comp,
   map_traverse := @identity.map_traverse,
   morphism := @identity.morphism }
@@ -86,6 +83,9 @@ def option.traverse {α β : Type u} (g : α → f β) : option α → f (option
  | none := pure none
  | (some x) := some <$> g x
 
+instance : traversable option :=
+{ traverse := @option.traverse }
+
 variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
 
@@ -98,7 +98,7 @@ lemma option.traverse_mk' (g : α → f β) :
 rfl
 
 lemma option.id_traverse (x : option α) :
-  option.traverse identity.mk x = ⟨ x ⟩ :=
+  option.traverse identity.mk x = x :=
 by { cases x ; unfold option.traverse ; refl }
 
 lemma option.traverse_comp (g : α → f β) (h : β → f' γ) :
@@ -120,10 +120,8 @@ by cases x with x ; simp! [*] with norm
 
 end option
 
-instance : traversable option :=
-{ to_functor := _,
-  traverse := @option.traverse,
-  id_traverse := @option.id_traverse,
+instance : is_lawful_traversable option :=
+{ id_traverse := @option.id_traverse,
   traverse_comp := @option.traverse_comp,
   map_traverse := @option.map_traverse,
   morphism := @option.morphism }
@@ -154,7 +152,7 @@ open applicative functor
 open list (cons)
 
 lemma list.id_traverse (xs : list α) :
-  list.traverse identity.mk xs = ⟨ xs ⟩ :=
+  list.traverse identity.mk xs = xs :=
 by induction xs ; simp! [*] with norm ; refl
 
 lemma list.traverse_comp (g : α → f β) (h : β → f' γ) (x : list α) :
@@ -179,13 +177,11 @@ by induction x ; simp! [*] with norm
 
 end list
 
-instance : has_traverse list :=
+instance : traversable list :=
 { traverse := @list.traverse }
 
-instance : traversable list :=
-{ to_functor := _,
-  traverse := @list.traverse,
-  id_traverse := @list.id_traverse,
+instance : is_lawful_traversable list :=
+{ id_traverse := @list.id_traverse,
   traverse_comp := @list.traverse_comp,
   map_traverse := @list.map_traverse,
   morphism := @list.morphism }

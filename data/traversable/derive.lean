@@ -25,7 +25,7 @@ do t ← infer_type e >>= whnf,
    then   mcond (succeeds $ is_def_eq t v)
                 (pure $ some $ expr.app f e)
                 (if ¬ v.occurs (t.app_fn)
-                    then some <$> to_expr ``(compose.mk (has_traverse.traverse' %%f %%e))
+                    then some <$> to_expr ``(compose.mk (traversable.traverse %%f %%e))
                     else fail format!"type {t} is not traversable with respect to variable {v}")
    else
          (is_def_eq t.app_fn cl >> some <$> to_expr ``(compose.mk %%e))
@@ -59,7 +59,7 @@ do g ← target,
 open applicative
 
 meta def derive_traverse : tactic unit :=
-do `(has_traverse %%f) ← target | failed,
+do `(traversable %%f) ← target | failed,
    env ← get_env,
    let n := f.get_app_fn.const_name,
    let cs := env.constructors_of n,

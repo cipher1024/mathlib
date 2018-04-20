@@ -50,14 +50,15 @@ open applicative_morphism
 
 end applicative_morphism
 
-class has_traverse (t : Type u → Type u) :=
+class traversable (t : Type u → Type u)
+extends functor t :=
 (traverse : Π {m : Type u → Type u} [applicative m]
    {α β : Type u},
    (α → m β) → t α → m (t β))
 
 open functor
 
-export has_traverse (traverse)
+export traversable (traverse)
 
 section functions
 
@@ -68,16 +69,16 @@ variables {α β : Type u}
 
 variables {f : Type u → Type u} [applicative f]
 
-def sequence [has_traverse t] :
+def sequence [traversable t] :
   t (f α) → f (t α) :=
 traverse id
 
 end functions
 
-class traversable (t : Type u → Type u)
-extends has_traverse t, functor t :
+class is_lawful_traversable (t : Type u → Type u) [traversable t]
+extends is_lawful_functor t :
   Type (u+1) :=
-(id_traverse : ∀ {α : Type u} (x : t α), traverse (identity.mk) x = ⟨ x ⟩ )
+(id_traverse : ∀ {α : Type u} (x : t α), traverse identity.mk x = x )
 (traverse_comp : ∀ {G H : Type u → Type u}
                [applicative G] [applicative H]
                [is_lawful_applicative G] [is_lawful_applicative H]
@@ -99,19 +100,19 @@ extends has_traverse t, functor t :
               ∀ {α β : Type u} (f : α → G β) (x : t α),
               eta (traverse f x) = traverse (@eta _ ∘ f) x)
 
-open traversable
+open is_lawful_traversable
 
 lemma map_identity_mk {α β : Type u}
   (f : α → β) :
   map f ∘ @identity.mk α = @identity.mk β ∘ f :=
 rfl
 
-attribute [norm] traversable.morphism
+attribute [norm] is_lawful_traversable.morphism
 
 section traversable
 
 variable {t : Type u → Type u}
-variable [traversable t]
+variables [traversable t] [is_lawful_traversable t]
 variables {G H : Type u → Type u}
 variables [applicative G] [is_lawful_applicative G]
 variables [applicative H] [is_lawful_applicative H]
@@ -122,13 +123,13 @@ variables f : β → γ
 
 
 lemma traverse_eq_map_ident {x : t β} :
-  traverse (identity.mk ∘ f) x = ⟨ f <$> x ⟩ :=
+  traverse (identity.mk ∘ f) x = map f <$> x :=
 calc
       traverse (identity.mk ∘ f) x
     = traverse (map f ∘ identity.mk) x : by simp [map_identity_mk]
 ... = map f <$> traverse identity.mk x : by rw [← map_traverse]
-... = map f <$> identity.mk x          : by simp [id_traverse]
-... = ⟨ f <$> x ⟩                       : by refl
+... = map f <$> identity.mk x          : by simp [id_traverse] ; refl
+... = map f <$> x                      : by refl
 
 variable {eta : applicative_morphism G H}
 

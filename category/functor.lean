@@ -30,8 +30,7 @@ by rw ← comp_map
 
 end functor
 
-structure identity (α : Type u) : Type u :=
-  (run_identity : α)
+def identity.mk {α : Sort u} : α → id α := id
 
 structure compose (f : Type u → Type u') (g : Type v → Type u) (α : Type v) : Type u' :=
   (run : f $ g α)
@@ -42,23 +41,22 @@ open function
 
 variables {α : Type u} {β : Type v} {γ : Type u'}
 
-def map (f : α → β) : identity α → identity β
-  | ⟨ x ⟩ := ⟨ f x ⟩
+def map (f : α → β) : id α → id β := f
 
 local infixr <$> := map
 
-lemma id_map : ∀ (x : identity α), map id x = x
- | ⟨ x ⟩ := rfl
+lemma id_map : ∀ (x : id α), map id x = x
+ | x := rfl
 
 lemma comp_map (f : α → β) (g : β → γ) :
-  ∀ (x : identity α), map (g ∘ f) x = g <$> f <$> x
- | ⟨ x ⟩ := rfl
+  ∀ (x : id α), map (g ∘ f) x = g <$> f <$> x
+ | x := rfl
 
 end identity
 
-instance identity_functor : functor identity :=
+instance identity_functor : functor id :=
 { map := @identity.map }
-instance identity_lawful_functor : is_lawful_functor identity :=
+instance identity_lawful_functor : is_lawful_functor id :=
 { id_map := @identity.id_map,
   comp_map := @identity.comp_map }
 
