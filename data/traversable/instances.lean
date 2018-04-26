@@ -10,6 +10,7 @@ This is a work-in-progress
 
 import .basic
 import category.basic
+import category.functor
 import category.applicative
 
 universe variables w u v w' u' v'
@@ -32,14 +33,6 @@ instance : traversable id :=
 
 variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
-
-lemma identity.traverse_mk (g : α → f β) (x : α) :
-  identity.traverse g (identity.mk x) = identity.mk <$> (g x) :=
-rfl
-
-lemma identity.traverse_mk' (g : α → f β) :
-  identity.traverse g ∘ identity.mk = map identity.mk ∘ g :=
-rfl
 
 lemma identity.id_traverse (x : id α) :
   identity.traverse identity.mk x = identity.mk x :=
@@ -88,14 +81,6 @@ instance : traversable option :=
 
 variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
-
-lemma option.traverse_mk (g : α → f β) (x : α) :
-  option.traverse g (some x) = some <$> (g x) :=
-rfl
-
-lemma option.traverse_mk' (g : α → f β) :
-  option.traverse g ∘ some = map some ∘ g :=
-rfl
 
 lemma option.id_traverse (x : option α) :
   option.traverse identity.mk x = x :=
@@ -185,3 +170,58 @@ instance : is_lawful_traversable list :=
   traverse_comp := @list.traverse_comp,
   map_traverse := @list.map_traverse,
   morphism := @list.morphism }
+
+namespace sum
+
+variables {γ : Type u}
+
+section traverse
+
+variables {f f' : Type u → Type u}
+variables [applicative f] [applicative f']
+
+open applicative functor
+open list (cons)
+
+protected def traverse {α β : Type u} (g : α → f β) : γ ⊕ α → f (γ ⊕ β)
+| (sum.inl x) := pure (sum.inl x)
+| (sum.inr x) := sum.inr <$> g x
+
+variables [is_lawful_applicative f] [is_lawful_applicative f']
+variables {α β η : Type u}
+
+protected lemma id_traverse (x : γ ⊕ α) :
+  sum.traverse identity.mk x = identity.mk x :=
+by cases x ; refl
+
+protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : γ ⊕ α) :
+        sum.traverse (compose.mk ∘ map h ∘ g) x =
+        compose.mk (sum.traverse h <$> sum.traverse g x) :=
+by { casesm _ ⊕ _; simp! [sum.traverse,id_map'] with norm ; refl }
+
+protected lemma map_traverse
+   (g : α → f' β) (f : β → η)
+   (x : γ ⊕ α) :
+  map f <$> sum.traverse g x = sum.traverse (map f ∘ g) x :=
+by { casesm _ ⊕ _ ; simp [map,sum.map,sum.traverse,id_map] with norm,
+     congr, }
+
+variable (eta : applicative_morphism f f')
+
+protected lemma morphism {α β : Type u}
+  (F : α → f β) (x : γ ⊕ α) :
+  eta (sum.traverse F x) = sum.traverse (@eta _ ∘ F) x :=
+by cases x; simp! [sum.traverse] with norm; refl
+
+end traverse
+
+instance : traversable.{u} (sum γ) :=
+{ traverse := @sum.traverse γ }
+
+instance : is_lawful_traversable.{u} (sum γ) :=
+{ id_traverse := @sum.id_traverse γ,
+  traverse_comp := @sum.traverse_comp γ,
+  map_traverse := @sum.map_traverse γ,
+  morphism := @sum.morphism γ }
+
+end sum
