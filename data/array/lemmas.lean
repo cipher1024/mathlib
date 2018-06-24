@@ -219,53 +219,6 @@ begin
     cc,  }
 end
 
-section traverse
-
-variables {f f' : Type u → Type u}
-variables [applicative f] [applicative f']
-
-open applicative functor
-open list (cons) nat
-
-variables {t t' : fin n → Type u}
-
--- protected def foreach' (a : d_array n t) (f : Π i : fin n, t i → t' i) : d_array n t' :=
--- iterate a a $ λ i v a', a'.write i (f i v)
-
--- protected def traverse_aux {α β : Type u} (g : α → f β) : Π n, array n α → f (array n β)
--- | 0 ⟨ ar ⟩ := pure ⟨ fin.elim0 ⟩
--- | (succ n) ar := _ <$> traverse_aux n (ar.pop_back) <*> g (ar.read ⟨n,lt_succ_self n⟩)
-
--- protected def traverse {α β : Type u} (g : α → f β) : array n α → f (array n β) :=
-
--- variables [is_lawful_applicative f] [is_lawful_applicative f']
--- variables {α β η : Type u}
-
--- protected lemma id_traverse (x : γ ⊕ α) :
---   sum.traverse identity.mk x = identity.mk x :=
--- by cases x ; refl
-
--- protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : γ ⊕ α) :
---         sum.traverse (compose.mk ∘ map h ∘ g) x =
---         compose.mk (sum.traverse h <$> sum.traverse g x) :=
--- by { casesm _ ⊕ _; simp! [sum.traverse,id_map'] with norm ; refl }
-
--- protected lemma map_traverse
---    (g : α → f' β) (f : β → η)
---    (x : γ ⊕ α) :
---   map f <$> sum.traverse g x = sum.traverse (map f ∘ g) x :=
--- by { casesm _ ⊕ _ ; simp [map,sum.map,sum.traverse,id_map] with norm,
---      congr, }
-
--- variable (eta : applicative_morphism f f')
-
--- protected lemma morphism {α β : Type u}
---   (F : α → f β) (x : γ ⊕ α) :
---   eta (sum.traverse F x) = sum.traverse (@eta _ ∘ F) x :=
--- by cases x; simp! [sum.traverse] with norm; refl
-
-end traverse
-
 instance {n} : traversable.{u} (array n) :=
 equiv.traversable array_equiv_vector
 
