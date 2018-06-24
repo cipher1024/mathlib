@@ -66,48 +66,11 @@ end
 
 end lemmas
 
-namespace identity
-
-open function
-
-variables {α : Type u} {β : Type v} {γ : Type u'}
-
-def pure : α → id α := id
-
-def seq : id (α → β) → id α → id β
-  | f x := f x
-
-local infix <$> := identity.map
-local infix <*> := seq
-
-lemma pure_seq_eq_map (g : α → β) : ∀ (x : id α), pure g <*> x = g <$> x
-  | x := rfl
-
-lemma map_pure (g : α → β) (x : α) :
-  g <$> pure x = pure (g x) :=
-rfl
-
-lemma seq_pure : ∀ (g : id (α → β)) (x : α),
-  g <*> pure x = (λ g : α → β, g x) <$> g
-  | g x := rfl
-
-lemma seq_assoc : ∀ (x : id α) (g : id (α → β)) (h : id (β → γ)),
-  h <*> (g <*> x) = (@comp α β γ <$> h) <*> g <*> x
-| x g h := rfl
-
-end identity
-
 instance applicative_id : applicative id :=
-{ map := @identity.map,
-  pure := @identity.pure,
-  seq := @identity.seq }
+{ pure := @id,
+  seq := λ α β f, f }
 instance lawful_applicative_id : is_lawful_applicative id :=
-{ id_map := @identity.id_map,
-  pure_seq_eq_map := @identity.pure_seq_eq_map,
-  map_pure := @identity.map_pure,
-  seq_pure := @identity.seq_pure,
-  seq_assoc := @identity.seq_assoc }
-
+by refine { .. } ; intros ; refl
 
 namespace compose
 

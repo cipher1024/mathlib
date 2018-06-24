@@ -48,7 +48,7 @@ lemma identity.map_traverse
    (g : α → f' β) (f : β → γ)
    (x : id α) :
   map f <$> identity.traverse g x = identity.traverse (map f ∘ g) x :=
-by simp [map,identity.map,identity.traverse,id_map] with norm
+by simp [map,identity.traverse,id_map] with norm
 
 variable (eta : applicative_morphism f f')
 
@@ -104,9 +104,6 @@ lemma option.morphism {α β : Type u} (g : α → f β) (x : option α) :
 by cases x with x ; simp! [*] with norm
 
 end option
-
-instance : is_lawful_functor option :=
-sorry
 
 instance : is_lawful_traversable option :=
 { id_traverse := @option.id_traverse,
