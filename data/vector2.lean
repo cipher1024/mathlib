@@ -132,18 +132,10 @@ variables {α β η : Type u}
 @[simp]
 protected lemma traverse_def (g : α → f β) (x : α) (xs : vector' n α) :
   vector.traverse g (x :: xs) = cons <$> g x <*> vector.traverse g xs :=
-sorry
-
-@[extensionality]
-protected lemma traverse_ext (xs ys : f (vector' n α))
-  (h : to_list <$> xs = to_list <$> ys) :
-  xs = ys :=
-sorry
-
-@[simp]
-protected lemma to_list_traverse (g : α → f β) (xs : vector' n α) :
-  to_list <$> vector.traverse g xs = traverse g (to_list xs) :=
-sorry
+by { cases xs, simp!,
+     elim_cast _ with i,
+     elim_cast _ with j, subst n,
+     simp at *, subst i, subst j, }
 
 protected lemma id_traverse (x : vector' n α) :
   vector.traverse identity.mk x = identity.mk x :=
@@ -154,8 +146,8 @@ by { cases x with x, subst n, dsimp [vector.traverse,cast],
 open function
 
 protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : vector' n α) :
-        vector.traverse (compose.mk ∘ functor.map h ∘ g) x =
-        compose.mk (vector.traverse h <$> vector.traverse g x) :=
+  vector.traverse (compose.mk ∘ functor.map h ∘ g) x =
+  compose.mk (vector.traverse h <$> vector.traverse g x) :=
 by { cases x with x,
      dunfold vector.traverse, subst n, dsimp [cast],
      induction x with x xs ; simp! [cast,*] with norm, refl,
