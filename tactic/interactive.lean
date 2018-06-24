@@ -5,7 +5,8 @@ Authors: Mario Carneiro
 -/
 import data.dlist data.dlist.basic data.prod category.basic
   tactic.basic tactic.rcases tactic.generalize_proofs
-  tactic.split_ifs meta.expr
+  tactic.split_ifs meta.expr tactic.ext
+  logic.basic
 
 open lean
 open lean.parser
@@ -174,60 +175,8 @@ do let h := h.get_or_else `this,
   | some o, none   := swap >> tactic.clear o >> swap
   end
 
-/-- Unfreeze local instances, which allows us to revert
-  instances in the context. -/
-meta def unfreezeI := tactic.unfreeze_local_instances
-
-/-- Reset the instance cache. This allows any new instances
-  added to the context to be used in typeclass inference. -/
-meta def resetI := reset_instance_cache
-
-/-- Like `intro`, but uses the introduced variable
-  in typeclass inference. -/
-meta def introI (p : parse ident_?) : tactic unit :=
-intro p >> reset_instance_cache
-
-/-- Like `intros`, but uses the introduced variable(s)
-  in typeclass inference. -/
-meta def introsI (p : parse ident_*) : tactic unit :=
-intros p >> reset_instance_cache
-
-/-- Used to add typeclasses to the context so that they can
-  be used in typeclass inference. The syntax is the same as `have`,
-  but the proof-omitted version is not supported. For
-  this one must write `have : t, { <proof> }, resetI, <proof>`. -/
-meta def haveI (h : parse ident?) (q₁ : parse (tk ":" *> texpr)?) (q₂ : parse (tk ":=" *> texpr)) : tactic unit :=
-do h ← match h with
-  | none   := get_unused_name "_inst"
-  | some a := return a
-  end,
-  «have» (some h) q₁ (some q₂),
-  match q₁ with
-  | none    := swap >> reset_instance_cache >> swap
-  | some p₂ := reset_instance_cache
-  end
-
-/-- Used to add typeclasses to the context so that they can
-  be used in typeclass inference. The syntax is the same as `let`. -/
-meta def letI (h : parse ident?) (q₁ : parse (tk ":" *> texpr)?) (q₂ : parse $ (tk ":=" *> texpr)?) : tactic unit :=
-do h ← match h with
-  | none   := get_unused_name "_inst"
-  | some a := return a
-  end,
-  «let» (some h) q₁ q₂,
-  match q₁ with
-  | none    := swap >> reset_instance_cache >> swap
-  | some p₂ := reset_instance_cache
-  end
-
-/-- Like `exact`, but uses all variables in the context
-  for typeclass inference. -/
-meta def exactI (q : parse texpr) : tactic unit :=
-reset_instance_cache >> exact q
-
 meta def symm_apply (e : expr) (cfg : apply_cfg := {}) : tactic (list (name × expr)) :=
 tactic.apply e cfg <|> (symmetry >> tactic.apply e cfg)
-
 /--
   `apply_assumption` looks for an assumption of the form `... → ∀ _, ... → head`
   where `head` matches the current goal.
@@ -299,22 +248,6 @@ done
 
 /-- Shorter name for the tactic `tautology`. -/
 meta def tauto := tautology
-
-/--
- Tag lemmas of the form:
-
- ```
- lemma my_collection.ext (a b : my_collection)
-   (h : ∀ x, a.lookup x = b.lookup y) :
-   a = b := ...
- ```
- -/
-@[user_attribute]
-meta def extensional_attribute : user_attribute :=
-{ name := `extensionality,
-  descr := "lemmas usable by `ext` tactic" }
-
-attribute [extensionality] _root_.funext array.ext prod.ext
 
 /--
   `ext1 id` selects and apply one extensionality lemma (with attribute
@@ -547,6 +480,14 @@ get_current_field
 meta def apply_field : tactic unit :=
 propagate_tags $
 get_current_field >>= applyc
+
+meta def elim_cast (rev : parse (tk "!")?) (e : parse texpr) (n : parse (tk "with" *> ident)) : tactic unit :=
+do let h : name := ("H" ++ n.to_string : string),
+   interactive.generalize h () (``(cast _ %%e), n),
+   asm ← get_local h,
+   to_expr ``(heq_of_cast_eq _ %%asm) >>= note h none,
+   tactic.clear asm,
+   when rev.is_some (interactive.revert [n])
 
 end interactive
 end tactic

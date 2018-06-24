@@ -9,7 +9,7 @@ Classical versions are in the namespace "classical".
 Note: in the presence of automation, this whole file may be unnecessary. On the other hand,
 maybe it is useful for writing automation.
 -/
-import data.prod tactic.interactive
+import data.prod tactic.cache
 
 /-
     miscellany
@@ -627,3 +627,15 @@ lemma classical.nonempty_pi {α : Sort u} {β : α → Sort v} :
 iff.intro (assume ⟨f⟩ a, ⟨f a⟩) (assume f, ⟨assume a, classical.choice $ f a⟩)
 
 end nonempty
+
+lemma cast_eq_of_heq  {α : Sort*} {β : Sort*} {x : α} {y : β}
+  (h : α = β)
+  (h' : x == y) :
+  cast h x = y :=
+by cc
+
+lemma heq_of_cast_eq {α β} {x : α} {y : β}
+  (h : α = β)
+  (h' : cast h x = y) :
+  x == y :=
+by cc

@@ -77,7 +77,7 @@ def pure : α → id α := id
 def seq : id (α → β) → id α → id β
   | f x := f x
 
-local infix <$> := map
+local infix <$> := identity.map
 local infix <*> := seq
 
 lemma pure_seq_eq_map (g : α → β) : ∀ (x : id α), pure g <*> x = g <$> x
@@ -123,7 +123,7 @@ def seq  {α β : Type v} : compose f g (α → β) → compose f g α → compo
 instance : has_pure (compose f g) :=
 ⟨ λ _ x, ⟨ pure $ pure x ⟩ ⟩
 
-local infix ` <$> ` := map
+local infix ` <$> ` := compose.map
 local infix ` <*> ` := seq
 
 variables [is_lawful_applicative f] [is_lawful_applicative g]

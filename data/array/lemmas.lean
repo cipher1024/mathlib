@@ -3,7 +3,7 @@ Copyright (c) 2017 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Mario Carneiro
 -/
-import data.list.basic data.buffer
+import data.list.basic data.buffer data.equiv data.vector2
 
 universes u w
 
@@ -16,7 +16,7 @@ instance [∀ i, inhabited (α i)] : inhabited (d_array n α) :=
 end d_array
 
 namespace array
-variables {n : nat} {α : Type u} {β : Type w}
+variables {n m : nat} {α : Type u} {β : Type w}
 
 instance [inhabited α] : inhabited (array n α) := d_array.inhabited
 
@@ -130,6 +130,12 @@ heq_of_heq_of_eq
 @[simp] theorem to_array_to_list (l : list α) : l.to_array.to_list = l :=
 list.ext_le (to_list_length _) $ λn h1 h2, to_list_nth_le _ _ _ _
 
+theorem to_list_of_heq {a₀ : array n α} {a₁ : array m α}
+  (h  : n = m)
+  (h' : a₀ == a₁) :
+  a₀.to_list = a₁.to_list :=
+by { congr ; assumption }
+
 lemma push_back_rev_list_core (a : array n α) (v : α) :
   ∀ i h h',
     d_array.iterate_aux (a.push_back v) (λ_, list.cons) i h [] =
@@ -186,3 +192,84 @@ end array
 
 instance (α) [decidable_eq α] : decidable_eq (buffer α) :=
 by tactic.mk_dec_eq_instance
+
+local prefix `♯`:0 := cast (by simp)
+
+namespace array
+
+variables {n : ℕ} (α : Type u)
+
+open function
+
+def array_equiv_vector : vector' n α ≃ array n α :=
+begin
+  refine
+    { to_fun := λ v, ♯ list.to_array v.to_list
+    , inv_fun := λ a, ⟨ a.to_list, by simp ⟩
+    , .. } ;
+  simp [function.right_inverse,left_inverse] ;
+  intros,
+  { ext, simp,
+    elim_cast _ with i,
+    have := to_list_of_heq _ Hi.symm,
+    simp [vector.to_list,*], simp, },
+  { elim_cast _ with i,
+    dsimp at Hi,
+    have := to_list_to_array x,
+    cc,  }
+end
+
+section traverse
+
+variables {f f' : Type u → Type u}
+variables [applicative f] [applicative f']
+
+open applicative functor
+open list (cons) nat
+
+variables {t t' : fin n → Type u}
+
+-- protected def foreach' (a : d_array n t) (f : Π i : fin n, t i → t' i) : d_array n t' :=
+-- iterate a a $ λ i v a', a'.write i (f i v)
+
+-- protected def traverse_aux {α β : Type u} (g : α → f β) : Π n, array n α → f (array n β)
+-- | 0 ⟨ ar ⟩ := pure ⟨ fin.elim0 ⟩
+-- | (succ n) ar := _ <$> traverse_aux n (ar.pop_back) <*> g (ar.read ⟨n,lt_succ_self n⟩)
+
+-- protected def traverse {α β : Type u} (g : α → f β) : array n α → f (array n β) :=
+
+-- variables [is_lawful_applicative f] [is_lawful_applicative f']
+-- variables {α β η : Type u}
+
+-- protected lemma id_traverse (x : γ ⊕ α) :
+--   sum.traverse identity.mk x = identity.mk x :=
+-- by cases x ; refl
+
+-- protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : γ ⊕ α) :
+--         sum.traverse (compose.mk ∘ map h ∘ g) x =
+--         compose.mk (sum.traverse h <$> sum.traverse g x) :=
+-- by { casesm _ ⊕ _; simp! [sum.traverse,id_map'] with norm ; refl }
+
+-- protected lemma map_traverse
+--    (g : α → f' β) (f : β → η)
+--    (x : γ ⊕ α) :
+--   map f <$> sum.traverse g x = sum.traverse (map f ∘ g) x :=
+-- by { casesm _ ⊕ _ ; simp [map,sum.map,sum.traverse,id_map] with norm,
+--      congr, }
+
+-- variable (eta : applicative_morphism f f')
+
+-- protected lemma morphism {α β : Type u}
+--   (F : α → f β) (x : γ ⊕ α) :
+--   eta (sum.traverse F x) = sum.traverse (@eta _ ∘ F) x :=
+-- by cases x; simp! [sum.traverse] with norm; refl
+
+end traverse
+
+instance {n} : traversable.{u} (array n) :=
+equiv.traversable array_equiv_vector
+
+instance : is_lawful_traversable.{u} (array n) :=
+equiv.is_lawful_traversable array_equiv_vector
+
+end array

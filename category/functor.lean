@@ -5,7 +5,7 @@ Author: Simon Hudon
 
 Standard identity and composition functors
 -/
-
+import tactic.ext
 import category.basic
 
 universe variables u v w u' v' w'
@@ -35,21 +35,27 @@ def identity.mk {α : Sort u} : α → id α := id
 structure compose (f : Type u → Type u') (g : Type v → Type u) (α : Type v) : Type u' :=
   (run : f $ g α)
 
+@[extensionality]
+lemma compose.ext {f : Type u → Type u'} {g : Type v → Type u} {α : Type v}
+  {x y : compose f g α}
+  (h : x.run = y.run) :
+  x = y := by { cases x, cases y, cases h, refl }
+
 namespace identity
 
 open function
 
 variables {α : Type u} {β : Type v} {γ : Type u'}
 
-def map (f : α → β) : id α → id β := f
+protected def map (f : α → β) : id α → id β := f
 
-local infixr <$> := map
+local infixr <$> := identity.map
 
-lemma id_map : ∀ (x : id α), map id x = x
+lemma id_map : ∀ (x : id α), identity.map id x = x
  | x := rfl
 
 lemma comp_map (f : α → β) (g : β → γ) :
-  ∀ (x : id α), map (g ∘ f) x = g <$> f <$> x
+  ∀ (x : id α), identity.map (g ∘ f) x = g <$> f <$> x
  | x := rfl
 
 end identity
@@ -66,22 +72,22 @@ variables {f : Type u → Type u'} {g : Type v → Type u}
 
 variables [functor f] [functor g]
 
-def map {α β : Type v} (h : α → β) : compose f g α → compose f g β
+protected def map {α β : Type v} (h : α → β) : compose f g α → compose f g β
   | ⟨ x ⟩ := ⟨ functor.map h <$> x ⟩
 
 variables [is_lawful_functor f] [is_lawful_functor g]
 variables {α β γ : Type v}
 
-local infix ` <$> ` := map
+local infix ` <$> ` := compose.map
 
-lemma id_map : ∀ (x : compose f g α), map id x = x
+lemma id_map : ∀ (x : compose f g α), compose.map id x = x
   | ⟨ x ⟩ :=
-by simp [map,functor.id_map']
+by simp [compose.map,functor.id_map']
 
 protected lemma comp_map (g_1 : α → β) (h : β → γ) : ∀ (x : compose f g α),
-           map (h ∘ g_1) x = map h (map g_1 x)
+           compose.map (h ∘ g_1) x = compose.map h (compose.map g_1 x)
   | ⟨ x ⟩ :=
-by simp [map,functor.comp_map' g_1 h] with norm
+by simp [compose.map,functor.comp_map' g_1 h] with norm
 
 end compose
 

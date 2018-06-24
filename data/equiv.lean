@@ -13,9 +13,9 @@ import data.set.lattice algebra.group data.vector2
 open function
 
 universes u v w
-variables {α : Sort u} {β : Sort v} {γ : Sort w}
-
 namespace function
+
+variables {α : Sort u} {β : Sort v} {γ : Sort w}
 
 theorem left_inverse.f_g_eq_id {f : α → β} {g : β → α} (h : left_inverse f g) : f ∘ g = id :=
 funext $ h
@@ -41,6 +41,8 @@ structure equiv (α : Sort*) (β : Sort*) :=
 (right_inv : right_inverse inv_fun to_fun)
 
 namespace equiv
+variables {α : Sort u} {β : Sort v} {γ : Sort w}
+
 /-- `perm α` is the type of bijections from `α` to itself. -/
 @[reducible] def perm (α : Sort*) := equiv α α
 
@@ -116,7 +118,7 @@ theorem left_inverse_symm (f : equiv α β) : left_inverse f.symm f := f.left_in
 
 theorem right_inverse_symm (f : equiv α β) : function.right_inverse f.symm f := f.right_inv
 
-protected lemma image_eq_preimage {α β} (e : α ≃ β) (s : set α) : e '' s = e.symm ⁻¹' s := 
+protected lemma image_eq_preimage {α β} (e : α ≃ β) (s : set α) : e '' s = e.symm ⁻¹' s :=
 set.ext $ assume x, set.mem_image_iff_of_inverse e.left_inv e.right_inv
 
 protected lemma subset_image {α β} (e : α ≃ β) (s : set α) (t : set β) : t ⊆ e '' s ↔ e.symm '' t ⊆ s :=
@@ -631,3 +633,51 @@ instance {α} [subsingleton α] : subsingleton (plift α) := equiv.plift.subsing
 
 instance {α} [decidable_eq α] : decidable_eq (ulift α) := equiv.ulift.decidable_eq
 instance {α} [decidable_eq α] : decidable_eq (plift α) := equiv.plift.decidable_eq
+
+namespace equiv
+
+variables {t t' : Type u → Type u}
+variables (eq : Π α, t α ≃ t' α)
+
+section functor
+variables [functor t]
+variables
+open functor
+protected def map {α β : Type u} (f : α → β) (x : t' α) : t' β :=
+eq β $ map f ((eq α).symm x)
+
+protected def functor  : functor t' :=
+{ map := @equiv.map _ _ eq _ }
+
+variables [is_lawful_functor t]
+
+protected lemma id_map {α : Type u} (x : t' α) :
+  equiv.map eq id x = x :=
+by simp [equiv.map,id_map]
+
+protected lemma comp_map {α β γ : Type u} (g : α → β) (h : β → γ) (x : t' α) :
+  equiv.map eq (h ∘ g) x = equiv.map eq h (equiv.map eq g x) :=
+by { dsimp [equiv.map], simp, apply comp_map, }
+
+protected def is_lawful_functor : @is_lawful_functor _ (equiv.functor eq) :=
+{ id_map := @equiv.id_map _ _ eq _ _,
+  comp_map := @equiv.comp_map _ _ eq _ _ }
+
+end functor
+
+variables [traversable t]
+variables {m : Type u → Type u} [applicative m]
+variables {α β : Type u}
+
+protected def traverse (f : α → m β) (x : t' α) : m (t' β) :=
+eq β <$> traverse f ((eq α).symm x)
+
+protected def traversable : traversable t' :=
+{ to_functor := equiv.functor eq,
+  traverse := @equiv.traverse _ _ eq _ }
+
+protected def is_lawful_traversable :
+  @is_lawful_traversable t' (equiv.traversable eq) :=
+sorry
+
+end equiv
