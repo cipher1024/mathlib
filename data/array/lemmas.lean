@@ -3,7 +3,7 @@ Copyright (c) 2017 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Mario Carneiro
 -/
-import data.list.basic data.buffer data.equiv data.vector2
+import data.list.basic data.buffer data.traversable.equiv data.vector2
 
 universes u w
 
@@ -134,7 +134,7 @@ theorem to_list_of_heq {a₀ : array n α} {a₁ : array m α}
   (h  : n = m)
   (h' : a₀ == a₁) :
   a₀.to_list = a₁.to_list :=
-by { congr ; assumption }
+by congr; assumption
 
 lemma push_back_rev_list_core (a : array n α) (v : α) :
   ∀ i h h',
@@ -203,11 +203,9 @@ open function
 
 def array_equiv_vector : vector' n α ≃ array n α :=
 begin
-  refine
-    { to_fun := λ v, ♯ list.to_array v.to_list
-    , inv_fun := λ a, ⟨ a.to_list, by simp ⟩
-    , .. } ;
-  simp [function.right_inverse,left_inverse] ;
+  refine { to_fun := λ v, ♯ list.to_array v.to_list,
+           inv_fun := λ a, ⟨a.to_list, by simp⟩, .. };
+  simp [function.right_inverse,left_inverse];
   intros,
   { ext, simp,
     elim_cast _ with i,

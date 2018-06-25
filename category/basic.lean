@@ -31,8 +31,8 @@ def mmap₂
   {α₁ α₂ φ : Type u}
   (g : α₁ → α₂ → f φ) :
   Π (ma₁ : list α₁) (ma₂: list α₂), f (list φ)
- | (x :: xs) (y :: ys) := (::) <$> g x y <*> mmap₂ xs ys
- | _ _ := pure []
+| (x :: xs) (y :: ys) := (::) <$> g x y <*> mmap₂ xs ys
+| _ _ := pure []
 
 def mmap₂'  (g : α → β → f γ) : list α → list β → f punit
 | (x :: xs) (y :: ys) := g x y *> mmap₂' xs ys
@@ -59,12 +59,12 @@ end
 by simp [(pure_seq_eq_map _ _).symm]; simp [seq_assoc]
 
 private def mpartition_aux (x : α) : ulift bool → list α × list α → list α × list α
- | ⟨ tt ⟩ (xs,ys) := (x::xs,ys)
- | ⟨ ff ⟩ (xs,ys) := (xs,x::ys)
+| ⟨tt⟩ (xs,ys) := (x::xs,ys)
+| ⟨ff⟩ (xs,ys) := (xs,x::ys)
 
 def list.mpartition' (g : α → f (ulift bool)) : list α → f (list α × list α)
- | [] := pure ([],[])
- | (x :: xs) := mpartition_aux x <$> g x <*> list.mpartition' xs
+| [] := pure ([],[])
+| (x :: xs) := mpartition_aux x <$> g x <*> list.mpartition' xs
 
 def list.mpartition {α : Type} {f : Type → Type v} [applicative f] [is_lawful_applicative f]
   (g : α → f bool) :=
@@ -84,8 +84,7 @@ section monad
 variables {m : Type u → Type v} [monad m] [is_lawful_monad m]
 
 lemma map_bind (x : m α) {g : α → m β} {f : β → γ} : f <$> (x >>= g) = (x >>= λa, f <$> g a) :=
-by { rw [← bind_pure_comp_eq_map,bind_assoc],
-     simp [bind_pure_comp_eq_map], }
+by rw [← bind_pure_comp_eq_map,bind_assoc]; simp [bind_pure_comp_eq_map]
 
 lemma seq_bind_eq (x : m α) {g : β → m γ} {f : α → β} : (f <$> x) >>= g = (x >>= g ∘ f) :=
 show bind (f <$> x) g = bind x (g ∘ f),

@@ -237,13 +237,13 @@ solve_by_elim_aux opt.discharger opt.restr_hyp_set opt.max_rep
 meta def tautology : tactic unit :=
 repeat (do
   gs ← get_goals,
-  () <$ tactic.intros ;
-  casesm (some ()) [``(_ ∧ _),``(_ ∨ _),``(Exists _)] ;
+  () <$ tactic.intros;
+  casesm (some ()) [``(_ ∧ _),``(_ ∨ _),``(Exists _)];
   constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)],
   gs' ← get_goals,
-  guard (gs ≠ gs') ) ;
+  guard (gs ≠ gs') );
 repeat
-(reflexivity <|> solve_by_elim <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]) ;
+(reflexivity <|> solve_by_elim <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]);
 done
 
 /-- Shorter name for the tactic `tautology`. -/

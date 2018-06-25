@@ -20,9 +20,9 @@ variables (f : Type u → Type v) [applicative f] [is_lawful_applicative f]
 variables (g : Type u → Type w) [applicative g] [is_lawful_applicative g]
 
 structure applicative_morphism : Type (max (u+1) v w) :=
-  (F : ∀ {α : Type u}, f α → g α)
-  (preserves_pure' : ∀ {α : Type u} (x : α), F (pure x) = pure x)
-  (preserves_seq' : ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y)
+(F : ∀ {α : Type u}, f α → g α)
+(preserves_pure' : ∀ {α : Type u} (x : α), F (pure x) = pure x)
+(preserves_seq' : ∀ {α β : Type u} (x : f (α → β)) (y : f α), F (x <*> y) = F x <*> F y)
 
 instance : has_coe_to_fun (applicative_morphism f g) :=
 { F := λ _, ∀ {α}, f α → g α,
@@ -43,8 +43,7 @@ by apply applicative_morphism.preserves_seq'
 @[norm]
 lemma applicative_morphism.preserves_map {α β : Type u} (x : α → β)  (y : f α) :
   F (x <$> y) = x <$> F y :=
-by { rw [← pure_seq_eq_map,F.preserves_seq],
-     simp with norm }
+by rw [← pure_seq_eq_map,F.preserves_seq]; simp with norm
 
 open applicative_morphism
 
@@ -128,7 +127,7 @@ calc
       traverse (identity.mk ∘ f) x
     = traverse (map f ∘ identity.mk) x : by simp [map_identity_mk]
 ... = map f <$> traverse identity.mk x : by rw [← map_traverse]
-... = map f <$> identity.mk x          : by simp [id_traverse] ; refl
+... = map f <$> identity.mk x          : by simp [id_traverse]; refl
 ... = map f <$> x                      : by refl
 
 variable {eta : applicative_morphism G H}

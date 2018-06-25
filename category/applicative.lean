@@ -32,14 +32,7 @@ by rw [← pure_seq_eq_map,← pure_seq_eq_map,
 
 lemma applicative.seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :
   x <*> (h <$> y) = (flip comp h) <$> x <*> y :=
-begin
-  rw [← pure_seq_eq_map,← pure_seq_eq_map,
-      seq_assoc,
-      seq_pure,
-      pure_seq_eq_map,
-      ← comp_map] ,
-  refl
-end
+by rw [← pure_seq_eq_map,← pure_seq_eq_map,seq_assoc,seq_pure,pure_seq_eq_map,← comp_map]; refl
 
 open applicative functor
 
@@ -59,10 +52,7 @@ by rw [← pure_seq_eq_map,
 lemma applicative.seq_map_comm
   (x : f (γ → α)) (y : f β) :
   x <*> g <$> y = flip comp g <$> x <*> y :=
-begin
-  rw [← pure_seq_eq_map _ y, seq_assoc, seq_pure, ← comp_map],
-  refl,
-end
+by rw [← pure_seq_eq_map _ y, seq_assoc, seq_pure, ← comp_map]; refl
 
 end lemmas
 
@@ -70,7 +60,7 @@ instance applicative_id : applicative id :=
 { pure := @id,
   seq := λ α β f, f }
 instance lawful_applicative_id : is_lawful_applicative id :=
-by refine { .. } ; intros ; refl
+by refine { .. }; intros; refl
 
 namespace compose
 
@@ -81,10 +71,10 @@ variables {f : Type u → Type u'} {g : Type v → Type u}
 variables [applicative f] [applicative g]
 
 def seq  {α β : Type v} : compose f g (α → β) → compose f g α → compose f g β
-  | ⟨ h ⟩ ⟨ x ⟩ := ⟨ has_seq.seq <$> h <*> x ⟩
+| ⟨h⟩ ⟨x⟩ := ⟨has_seq.seq <$> h <*> x⟩
 
 instance : has_pure (compose f g) :=
-⟨ λ _ x, ⟨ pure $ pure x ⟩ ⟩
+⟨λ _ x, ⟨pure $ pure x⟩⟩
 
 local infix ` <$> ` := compose.map
 local infix ` <*> ` := seq
@@ -114,11 +104,11 @@ end
 
 lemma seq_assoc : ∀ (x : compose f g α) (h₀ : compose f g (α → β)) (h₁ : compose f g (β → γ)),
    h₁ <*> (h₀ <*> x) = (@comp α β γ <$> h₁) <*> h₀ <*> x
-| ⟨ x ⟩ ⟨ h₀ ⟩ ⟨ h₁ ⟩ :=
+| ⟨x⟩ ⟨h₀⟩ ⟨h₁⟩ :=
 by simp! [(∘),flip] with norm
 
 lemma pure_seq_eq_map (h : α → β) : ∀ (x : compose f g α), pure h <*> x = h <$> x
-  | ⟨ x ⟩ :=
+| ⟨x⟩ :=
 begin
   simp! with norm,
   congr, funext, simp with norm,

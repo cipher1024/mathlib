@@ -132,55 +132,66 @@ variables {α β η : Type u}
 @[simp]
 protected lemma traverse_def (g : α → f β) (x : α) (xs : vector' n α) :
   vector.traverse g (x :: xs) = cons <$> g x <*> vector.traverse g xs :=
-by { cases xs, simp!,
-     elim_cast _ with i,
-     elim_cast _ with j, subst n,
-     simp at *, subst i, subst j, }
+begin
+  cases xs, simp!,
+  elim_cast _ with i,
+  elim_cast _ with j, subst n,
+  simp at *, subst i, subst j
+end
 
 protected lemma id_traverse (x : vector' n α) :
   vector.traverse identity.mk x = identity.mk x :=
-by { cases x with x, subst n, dsimp [vector.traverse,cast],
-     induction x with x xs, refl,
-     simp! [x_ih], refl }
+begin
+  cases x with x, subst n,
+  dsimp [vector.traverse,cast],
+  induction x with x xs, refl,
+  simp! [x_ih], refl
+end
 
 open function
 
 protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : vector' n α) :
   vector.traverse (compose.mk ∘ functor.map h ∘ g) x =
   compose.mk (vector.traverse h <$> vector.traverse g x) :=
-by { cases x with x,
-     dunfold vector.traverse, subst n, dsimp [cast],
-     induction x with x xs ; simp! [cast,*] with norm, refl,
-     congr' 2, ext, simp [comp,flip] }
+begin
+  cases x with x,
+  dunfold vector.traverse, subst n, dsimp [cast],
+  induction x with x xs; simp! [cast,*] with norm, refl,
+  congr' 2, ext, simp [comp,flip]
+end
 
 protected lemma map_traverse
    (g : α → f' β) (f : β → η)
    (x : vector' n α) :
   map f <$> vector.traverse g x = vector.traverse (functor.map f ∘ g) x :=
-by { symmetry,
-     cases x with x, subst n, unfold vector.traverse cast,
-     induction x ; simp! [*,cast,map,flip,comp,vector.map] with norm, refl,
-     congr' 2, ext, cases x_1, refl, }
+begin
+  symmetry,
+  cases x with x, subst n, unfold vector.traverse cast,
+  induction x; simp! [*,cast,map,flip,comp,vector.map] with norm, refl,
+  congr' 2, ext, cases x_1, refl
+end
 
 variable (eta : applicative_morphism f f')
 
 protected lemma morphism {α β : Type*}
   (F : α → f β) (x : vector' n α) :
   eta (vector.traverse F x) = vector.traverse (@eta _ ∘ F) x :=
-by { cases x ;
-     simp! [vector.traverse] with norm,
-     induction x_val with x xs generalizing n,
-     { elim_cast _ with i,
-       elim_cast _ with j,
-       simp! at Hi Hj ; subst n ; cases Hi ; cases Hj,
-       simp [*] with norm },
-     specialize x_val_ih rfl, subst n,
-     revert x_val_ih,
-     elim_cast _ with i, elim_cast _ with j,
-     elim_cast _ with k, elim_cast _ with h,
-     intros, simp! at *,
-     subst k, subst h, simp with norm,
-     subst i, subst j, rw [x_val_ih], }
+begin
+  cases x;
+  simp! [vector.traverse] with norm,
+  induction x_val with x xs generalizing n,
+  { elim_cast _ with i,
+    elim_cast _ with j,
+    simp! at Hi Hj; subst n; cases Hi; cases Hj,
+    simp [*] with norm },
+  { specialize x_val_ih rfl, subst n,
+    revert x_val_ih,
+    elim_cast _ with i, elim_cast _ with j,
+    elim_cast _ with k, elim_cast _ with h,
+    intros, simp! at *,
+    subst k, subst h, simp with norm,
+    subst i, subst j, rw [x_val_ih] }
+end
 
 end traverse
 
@@ -193,7 +204,7 @@ instance : is_lawful_traversable.{u} (vector' n) :=
   traverse_comp := @vector.traverse_comp n,
   map_traverse := @vector.map_traverse.{u} n,
   morphism := @vector.morphism.{u} n,
-  id_map := by { intros, cases x, simp! [functor.map], },
-  comp_map := by { intros, cases x, simp! [functor.map], } }
+  id_map := by intros; cases x; simp! [functor.map],
+  comp_map := by intros; cases x; simp! [functor.map] }
 
 end vector

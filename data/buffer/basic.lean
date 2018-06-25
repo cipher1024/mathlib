@@ -22,31 +22,33 @@ begin
   subst n',
   have := array.to_list_to_array buf,
   have := array.to_list_to_array buf',
-  rw h at *, congr, apply eq_of_heq, transitivity ;
-  [ symmetry, skip ] ; assumption,
+  rw h at *, congr, apply eq_of_heq, transitivity;
+  [ symmetry, skip ]; assumption,
 end
 
 @[simp]
 lemma to_list_append_list  :
   to_list (append_list buf xs) = to_list buf ++ xs :=
-by { induction xs generalizing buf ; simp! [*],
-     cases buf, simp! [to_list,to_array],  }
+by induction xs generalizing buf; simp! [*];
+   cases buf; simp! [to_list,to_array]
 
 @[simp]
 lemma append_list_mk_buffer  :
   append_list mk_buffer xs = array.to_buffer (list.to_array xs) :=
-by { ext 1 with x, simp [array.to_buffer,to_list,to_list_append_list],
-     induction xs generalizing, refl, simp [to_array], refl, }
+by ext 1 with x; simp [array.to_buffer,to_list,to_list_append_list];
+   induction xs; [refl,skip]; simp [to_array]; refl
 
 def list_equiv_buffer (α : Type*) : list α ≃ buffer α :=
-by { refine { to_fun := list.to_buffer, inv_fun := buffer.to_list, .. } ;
-     simp [left_inverse,function.right_inverse],
-     { intro x, induction x, refl,
-       simp [list.to_buffer,append_list],
-       rw ← x_ih, refl, },
-     { intro x, cases x,
-       simp [to_list,to_array,list.to_buffer],
-       congr, simp, refl, apply array.to_list_to_array } }
+begin
+  refine { to_fun := list.to_buffer, inv_fun := buffer.to_list, .. };
+  simp [left_inverse,function.right_inverse],
+  { intro x, induction x, refl,
+    simp [list.to_buffer,append_list],
+    rw ← x_ih, refl },
+  { intro x, cases x,
+    simp [to_list,to_array,list.to_buffer],
+    congr, simp, refl, apply array.to_list_to_array }
+end
 
 instance : traversable buffer :=
 equiv.traversable list_equiv_buffer

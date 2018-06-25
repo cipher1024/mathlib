@@ -32,16 +32,16 @@ do t ← infer_type e >>= whnf,
      <|> some <$> to_expr ``(@pure %%cl _ _ %%e)
 
 meta def seq_apply_constructor : list expr → expr → tactic expr
- | (x :: xs) e := to_expr ``(%%e <*> %%x) >>= seq_apply_constructor xs
- | [] e := return e
+| (x :: xs) e := to_expr ``(%%e <*> %%x) >>= seq_apply_constructor xs
+| [] e := return e
 
 meta def fill_implicit_arg' : expr → expr → tactic expr
- | f (expr.pi n bi d b) :=
+| f (expr.pi n bi d b) :=
 if b.has_var then
 do v ← mk_meta_var d,
    fill_implicit_arg' (expr.app f v) (b.instantiate_var v)
 else return f
- | e _ := return e
+| e _ := return e
 
 meta def fill_implicit_arg (n : name) : tactic expr :=
 do c ← mk_const n,

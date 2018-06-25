@@ -1,16 +1,16 @@
 
-import data.traversable.instances data.equiv data.lazy_list
+import data.traversable.equiv data.lazy_list
 
 namespace lazy_list
 
 open function
 
 def list_equiv_lazy_list (α : Type*) : list α ≃ lazy_list α :=
-by { refine { to_fun := lazy_list.of_list, inv_fun := lazy_list.to_list, .. } ;
-     simp [left_inverse,function.right_inverse] ;
+by { refine { to_fun := lazy_list.of_list, inv_fun := lazy_list.to_list, .. };
+     simp [left_inverse,function.right_inverse];
      intros x ,
      all_goals
-     { induction x ; [ refl, simp! [*] ] },
+     { induction x; [ refl, simp! [*] ] },
      ext, rw [punit_eq_punit x], }
 
 instance : traversable lazy_list :=
