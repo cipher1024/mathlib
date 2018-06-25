@@ -201,7 +201,7 @@ variables {n : ℕ} (α : Type u)
 
 open function
 
-def array_equiv_vector : vector' n α ≃ array n α :=
+def array_equiv_vector : flip vector n α ≃ array n α :=
 begin
   refine { to_fun := λ v, ♯ list.to_array v.to_list,
            inv_fun := λ a, ⟨a.to_list, by simp⟩, .. };

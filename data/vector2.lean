@@ -97,8 +97,6 @@ def {u} mmap {m} [monad m] {α} {β : Type u} (f : α → m β) :
 
 end vector
 
-def vector' (n : ℕ) (α : Type*) := vector α n
-
 namespace vector
 
 universes u
@@ -112,13 +110,11 @@ variables [applicative f] [applicative f']
 open applicative functor
 open list (cons) nat
 
--- @[norm]
 def traverse_aux {α β : Type u} (g : α → f β) :
   Π (x : list α), f (vector β x.length)
 | [] := pure vector.nil
 | (x::xs) := vector.cons <$> g x <*> traverse_aux xs
 
--- @[norm]
 protected def traverse {α β : Type u} (g : α → f β) :
   vector α n → f (vector β n)
  | ⟨v,Hv⟩ := cast (by rw Hv) $ traverse_aux g v
@@ -130,7 +126,7 @@ variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β η : Type u}
 
 @[simp]
-protected lemma traverse_def (g : α → f β) (x : α) (xs : vector' n α) :
+protected lemma traverse_def (g : α → f β) (x : α) (xs : vector α n) :
   vector.traverse g (x :: xs) = cons <$> g x <*> vector.traverse g xs :=
 begin
   cases xs, simp!,
@@ -139,7 +135,7 @@ begin
   simp at *, subst i, subst j
 end
 
-protected lemma id_traverse (x : vector' n α) :
+protected lemma id_traverse (x : vector α n) :
   vector.traverse identity.mk x = identity.mk x :=
 begin
   cases x with x, subst n,
@@ -150,7 +146,7 @@ end
 
 open function
 
-protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : vector' n α) :
+protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : vector α n) :
   vector.traverse (compose.mk ∘ functor.map h ∘ g) x =
   compose.mk (vector.traverse h <$> vector.traverse g x) :=
 begin
@@ -162,7 +158,7 @@ end
 
 protected lemma map_traverse
    (g : α → f' β) (f : β → η)
-   (x : vector' n α) :
+   (x : vector α n) :
   map f <$> vector.traverse g x = vector.traverse (functor.map f ∘ g) x :=
 begin
   symmetry,
@@ -174,7 +170,7 @@ end
 variable (eta : applicative_morphism f f')
 
 protected lemma morphism {α β : Type*}
-  (F : α → f β) (x : vector' n α) :
+  (F : α → f β) (x : vector α n) :
   eta (vector.traverse F x) = vector.traverse (@eta _ ∘ F) x :=
 begin
   cases x;
@@ -195,11 +191,11 @@ end
 
 end traverse
 
-instance : traversable.{u} (vector' n) :=
+instance : traversable.{u} (flip vector n) :=
 { traverse := @vector.traverse n
 , map := λ α β, @vector.map.{u u} α β n }
 
-instance : is_lawful_traversable.{u} (vector' n) :=
+instance : is_lawful_traversable.{u} (flip vector n) :=
 { id_traverse := @vector.id_traverse n,
   traverse_comp := @vector.traverse_comp n,
   map_traverse := @vector.map_traverse.{u} n,

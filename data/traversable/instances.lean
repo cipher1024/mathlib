@@ -4,8 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Simon Hudon
 
 Type class for traversing collections
-
-This is a work-in-progress
 -/
 
 import .basic

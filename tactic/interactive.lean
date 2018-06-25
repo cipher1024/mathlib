@@ -487,7 +487,7 @@ get_current_field >>= applyc
     `elim_cast! e with x` acts similarly but reverts `Hx`.
 -/
 meta def elim_cast (rev : parse (tk "!")?) (e : parse texpr) (n : parse (tk "with" *> ident)) : tactic unit :=
-do h ← get_unused_name ("H" ++ n.to_string),
+do h ← get_unused_name ("H" ++ n.to_string : string),
    interactive.generalize h () (``(cast _ %%e), n),
    asm ← get_local h,
    to_expr ``(heq_of_cast_eq _ %%asm) >>= note h none,
