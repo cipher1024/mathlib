@@ -193,34 +193,15 @@ end array
 instance (α) [decidable_eq α] : decidable_eq (buffer α) :=
 by tactic.mk_dec_eq_instance
 
-local prefix `♯`:0 := cast (by simp)
-
 namespace array
-
-variables {n : ℕ} (α : Type u)
-
 open function
 
-def array_equiv_vector : flip vector n α ≃ array n α :=
-begin
-  refine { to_fun := λ v, ♯ list.to_array v.to_list,
-           inv_fun := λ a, ⟨a.to_list, by simp⟩, .. };
-  simp [function.right_inverse,left_inverse];
-  intros,
-  { ext, simp,
-    elim_cast _ with i,
-    have := to_list_of_heq _ Hi.symm,
-    simp [vector.to_list,*], simp, },
-  { elim_cast _ with i,
-    dsimp at Hi,
-    have := to_list_to_array x,
-    cc,  }
-end
+variable {n : ℕ}
 
-instance {n} : traversable.{u} (array n) :=
-equiv.traversable array_equiv_vector
+instance : traversable.{u} (array n) :=
+@equiv.traversable (flip vector n) _ (λ α, equiv.vector_equiv_array α n) _
 
 instance : is_lawful_traversable.{u} (array n) :=
-equiv.is_lawful_traversable array_equiv_vector
+@equiv.is_lawful_traversable (flip vector n) _ (λ α, equiv.vector_equiv_array α n) _ _
 
 end array

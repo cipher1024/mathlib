@@ -6,7 +6,7 @@ Author: Simon Hudon
 Type class for traversing collections
 -/
 
-import .basic
+import data.traversable.basic
 import category.basic
 import category.functor
 import category.applicative

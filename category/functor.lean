@@ -102,12 +102,12 @@ namespace sum
 
 variables {γ α β : Type v}
 
-protected def map (f : α → β) : γ ⊕ α → γ ⊕ β
+protected def mapr (f : α → β) : γ ⊕ α → γ ⊕ β
 | (inl x) := inl x
 | (inr x) := inr (f x)
 
 instance : functor (sum γ) :=
-{ map := @sum.map γ }
+{ map := @sum.mapr γ }
 
 instance : is_lawful_functor.{v} (sum γ) :=
 { id_map := by intros; casesm _ ⊕ _; refl,
