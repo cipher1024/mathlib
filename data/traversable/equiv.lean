@@ -67,18 +67,6 @@ variables {G H : Type u → Type u}
           [is_lawful_applicative H]
 variables (eta : applicative_morphism G H)
 variables {α β γ : Type u}
--- open functor traversable is_lawful_traversable
-
--- #check @is_lawful_traversable.map_traverse t'
-
--- local attribute [instance] equiv.functor equiv.traversable
-
--- def traverse_ :=
--- @traversable.traverse
-
--- variables (g : α → G α) (h : β → γ) (x : t' α)
-
--- #check @equiv.traverse
 
 open is_lawful_traversable
 
