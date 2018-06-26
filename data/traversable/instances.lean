@@ -36,7 +36,7 @@ by refl
 lemma identity.traverse_comp (g : α → f β) (h : β → f' γ) (x : id α) :
   identity.traverse (compose.mk ∘ map h ∘ g) x =
   compose.mk (identity.traverse h <$> identity.traverse g x) :=
-by simp! [identity.traverse,functor.id_map'] with norm
+by simp! [identity.traverse,functor.map_id] with norm
 
 lemma identity.map_traverse
    (g : α → f' β) (f : β → γ)
@@ -190,13 +190,13 @@ by cases x; refl
 protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : γ ⊕ α) :
         sum.traverse (compose.mk ∘ map h ∘ g) x =
         compose.mk (sum.traverse h <$> sum.traverse g x) :=
-by casesm _ ⊕ _; simp! [sum.traverse,id_map'] with norm; refl
+by casesm _ ⊕ _; simp! [sum.traverse,map_id] with norm; refl
 
 protected lemma map_traverse
    (g : α → f' β) (f : β → η)
    (x : γ ⊕ α) :
   map f <$> sum.traverse g x = sum.traverse (map f ∘ g) x :=
-by casesm _ ⊕ _; simp [map,sum.map,sum.traverse,id_map] with norm; congr
+by casesm _ ⊕ _; simp [map,sum.mapr,sum.traverse,id_map] with norm; congr
 
 variable (eta : applicative_morphism f f')
 

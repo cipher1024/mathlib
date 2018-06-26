@@ -16,12 +16,12 @@ variables {F : Type u → Type v}
 variables {α β γ : Type u}
 variables [functor F] [is_lawful_functor F]
 
-lemma functor.id_map' : functor.map id = (id : F α → F α) :=
+lemma functor.map_id : functor.map id = (id : F α → F α) :=
 by apply funext; apply id_map
 
-lemma functor.comp_map' (f : α → β) (g : β → γ) :
-  functor.map (g ∘ f) = (functor.map g ∘ functor.map f : F α → F γ) :=
-by apply funext; intro; apply comp_map
+lemma functor.map_comp_map (f : α → β) (g : β → γ) :
+  (functor.map g ∘ functor.map f : F α → F γ) = functor.map (g ∘ f) :=
+by apply funext; intro; rw comp_map
 
 @[norm]
 lemma functor.map_map (f : α → β) (g : β → γ) (x : F α) :
@@ -63,12 +63,12 @@ local infix ` <$> ` := compose.map
 
 lemma id_map : ∀ (x : compose f g α), compose.map id x = x
 | ⟨x⟩ :=
-by simp [compose.map,functor.id_map']
+by simp [compose.map,functor.map_id]
 
 protected lemma comp_map (g_1 : α → β) (h : β → γ) : ∀ (x : compose f g α),
            compose.map (h ∘ g_1) x = compose.map h (compose.map g_1 x)
 | ⟨x⟩ :=
-by simp [compose.map,functor.comp_map' g_1 h] with norm
+by simp [compose.map,functor.map_comp_map g_1 h] with norm
 
 end compose
 
