@@ -39,7 +39,7 @@ def mmap₂'  (g : α → β → f γ) : list α → list β → f punit
 | [] _ := pure punit.star
 | _ [] := pure punit.star
 
-variables  [is_lawful_applicative f]
+variables [is_lawful_applicative f]
 
 attribute [functor_norm] seq_assoc pure_seq_eq_map
 
@@ -92,7 +92,6 @@ by rw [← bind_pure_comp_eq_map, bind_assoc]; simp [pure_bind]
 
 lemma seq_eq_bind_map {x : m α} {f : m (α → β)} : f <*> x = (f >>= (<$> x)) :=
 (bind_map_eq_seq m f x).symm
-
 
 end monad
 
