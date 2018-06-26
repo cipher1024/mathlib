@@ -31,7 +31,7 @@ variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β γ : Type u}
 
 lemma identity.id_traverse (x : id α) :
-  identity.traverse identity.mk x = identity.mk x :=
+  identity.traverse identity.mk x = x :=
 by refl
 lemma identity.traverse_comp (g : α → f β) (h : β → f' γ) (x : id α) :
   identity.traverse (compose.mk ∘ map h ∘ g) x =
@@ -184,7 +184,7 @@ variables [is_lawful_applicative f] [is_lawful_applicative f']
 variables {α β η : Type u}
 
 protected lemma id_traverse (x : γ ⊕ α) :
-  sum.traverse identity.mk x = identity.mk x :=
+  sum.traverse identity.mk x = x :=
 by cases x; refl
 
 protected lemma traverse_comp (g : α → f β) (h : β → f' η) (x : γ ⊕ α) :
