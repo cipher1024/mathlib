@@ -3,7 +3,7 @@ Copyright (c) 2018 Simon Hudon. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Simon Hudon
 
-Type class for traversing collections
+Instances of `traversable` for types from the core library
 -/
 
 import data.traversable.basic
