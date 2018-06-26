@@ -136,7 +136,7 @@ begin
 end
 
 protected lemma id_traverse (x : vector α n) :
-  vector.traverse identity.mk x = identity.mk x :=
+  vector.traverse identity.mk x = x :=
 begin
   cases x with x, subst n,
   dsimp [vector.traverse,cast],
