@@ -10,18 +10,18 @@ import data.equiv data.traversable.basic
 universes u
 
 namespace equiv
-section equiv
 
 section functor
 parameters {t t' : Type u → Type u}
 parameters (eqv : Π α, t α ≃ t' α)
 variables [functor t]
-variables
+
 open functor
+
 protected def map {α β : Type u} (f : α → β) (x : t' α) : t' β :=
 eqv β $ map f ((eqv α).symm x)
 
-protected def functor  : functor t' :=
+protected def functor : functor t' :=
 { map := @equiv.map _ }
 
 variables [is_lawful_functor t]
@@ -41,7 +41,6 @@ protected def is_lawful_functor : @is_lawful_functor _ equiv.functor :=
 end functor
 
 section traversable
-
 parameters {t t' : Type u → Type u}
 parameters (eqv : Π α, t α ≃ t' α)
 variables [traversable t]
@@ -57,6 +56,7 @@ protected def traversable : traversable t' :=
 
 end traversable
 
+section equiv
 parameters {t t' : Type u → Type u}
 parameters (eqv : Π α, t α ≃ t' α)
 variables [traversable t]
