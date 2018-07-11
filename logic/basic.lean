@@ -9,7 +9,7 @@ Classical versions are in the namespace "classical".
 Note: in the presence of automation, this whole file may be unnecessary. On the other hand,
 maybe it is useful for writing automation.
 -/
--- import data.prod tactic.cache
+import data.prod tactic.cache
 
 /-
     miscellany
