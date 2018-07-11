@@ -22,20 +22,14 @@ jobs:
     - stage: Pre-build
       script:
         - rm mathlib.txt || true
-        - find . -name "*.olean" -print
         - timeout 2400 leanpkg test || echo timed out
-        # - find . -name "*.lean" -delete
-        # - find $HOME/.elan/toolchains/3.4.1/lib/lean/library/ -name "*.lean" -delete
 
     - stage: Test
       script:
-        - find . -name "*.olean" -print
         - leanpkg test
-        # - lean tactic/*.lean
         - lean --recursive --export=mathlib.txt
         - leanchecker mathlib.txt
-        # - find . -name "*.lean" -delete
-        # - find $HOME/.elan/toolchains/3.4.1/lib/lean/library/ -name "*.lean" -delete
+        - find . -name "*.lean" -delete
 
 notifications:
   webhooks:
