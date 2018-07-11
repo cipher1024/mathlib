@@ -21,19 +21,18 @@ jobs:
   include:
     - stage: Pre-build
       script:
-        - git status | grep  -e "Changes not staged fort commit:"; [ $? -ne 0 ] || git checkout -f HEAD
+        - (git status | grep  -e "Changes not staged for commit:"); RESULT=$?
+        - echo $RESULT
+        - if [ $RESULT -eq 0 ]; then git checkout -f HEAD ; fi
         - rm mathlib.txt || true
-        - timeout 2400 leanpkg test || echo timed out
+        - (timeout 120 leanpkg test | grep -e "error"); test $?  -ne 0
 
     - stage: Test
       script:
-        # - git status | grep  -e "Changes not staged fort commit:"; [ $? -ne 0 ]
-        - git status | grep  -e "Changes not staged fort commit:"; [ $? -ne 1 ]
+        - (git status | grep  -e "Changes not staged for commit:"); test $? -ne 0
         - leanpkg test
         - lean --recursive --export=mathlib.txt
         - leanchecker mathlib.txt
-        - find . -name "*.lean" -delete
-
 
 notifications:
   webhooks:
