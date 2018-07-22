@@ -448,6 +448,14 @@ meta def apply_field : tactic unit :=
 propagate_tags $
 get_current_field >>= applyc
 
+meta def field (n : parse ident) (tac : itactic) : tactic unit :=
+do gs ← get_goals,
+   ts ← gs.mmap get_tag,
+   ([g],gs') ← pure $ (list.zip gs ts).partition (λ x, x.snd.nth 1 = some n),
+   set_goals [g.1],
+   tac, done,
+   set_goals $ gs'.map prod.fst
+
 /--`apply_rules hs n`: apply the list of rules `hs` (given as pexpr) and `assumption` on the
 first goal and the resulting subgoals, iteratively, at most `n` times.
 `n` is 50 by default. `hs` can contain user attributes: in this case all theorems with this
