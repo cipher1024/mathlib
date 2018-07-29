@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Simon Hudon
 -/
 import tactic data.set.lattice data.prod
+       tactic.rewrite
 
 section solve_by_elim
 example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
@@ -533,3 +534,19 @@ begin
 end
 
 end h_generalize
+
+section assoc_rw
+
+variables x y z a b c : ℕ
+variables h₀ : ∀ (y : ℕ), x + (y + z) = 3 + y
+variables h₁ : a + (b + x) + y + (z + b + a) ≤ 0
+variables h₂ : y + b + c = y + b + a
+include h₀ h₁ h₂
+example : a + (b + x) + y + (z + b + c) ≤ 0 :=
+by { assoc_rw [h₀,h₂] at *,
+     guard_hyp _inst := is_associative ℕ has_add.add,
+       -- keep a local instance of is_associative to cache
+       -- type class queries
+     exact h₁ }
+
+end assoc_rw
