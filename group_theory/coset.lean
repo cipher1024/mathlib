@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mitchell Rowett, Scott Morrison
 -/
 import group_theory.subgroup data.equiv.basic data.quot
+import tactic.rewrite
 open set function
 variable {α : Type*}
 
@@ -175,55 +176,176 @@ end is_subgroup
 
 namespace left_cosets
 
-section
+section tactic
+
 open tactic
 meta def to_lam : expr → expr
 | (expr.pi v bi d b) := expr.lam v bi d b
 | _ := default _
 
 meta def apply_quotient_induction_on_n : tactic unit :=
-do p' ← tactic.target,
-   vs ← tactic.intros,
+do vs ← tactic.intros,
    p  ← tactic.target,
    e ← match vs with
+       | [] := skip
        | [x]     :=
-         do e ← tactic.to_expr ``(@quotient.induction_on' _ _ %%(to_lam p') %%x _ : %%p) >>= instantiate_mvars,
+         do fn ← lambdas [x] p,
+            e ← tactic.to_expr ``(@quotient.induction_on' _ _ %%fn %%x _ : %%p) <|>
+                tactic.to_expr ``(quotient.lift_on' %%x _ _ : %%p),
             all_goals (try apply_instance),
-            return e
-       | [x,y]   := tactic.to_expr ``(quotient.induction_on₂' %%x %%y _ : %%p)
-       | [x,y,z] := tactic.to_expr ``(quotient.induction_on₃' %%x %%y %%z _ : %%p)
+            tactic.exact e
+       | [x,y]   :=
+         do fn ← lambdas [x,y] p,
+            e ← tactic.to_expr ``(@quotient.induction_on₂' _ _ _ _ %%fn %%x %%y _ : %%p) <|>
+                tactic.to_expr ``(quotient.lift_on₂' %%x %%y _ _ : %%p),
+            tactic.exact e
+       | [x,y,z] :=
+         do fn ← lambdas [x,y,z] p,
+            e ← tactic.to_expr ``(@quotient.induction_on₃' _ _ _ _ _ _ %%fn %%x %%y %%z _ : %%p) <|>
+                tactic.to_expr ``(quotient.lift_on₃' %%x %%y _ _ : %%p),
+            tactic.exact e
        | _ := tactic.fail format!"unsupported arity: {vs.length}"
        end,
-   () <$ tactic.exact e
+   pure ()
 
-end
+open tactic
 
-run_cmd add_interactive [`apply_quotient_induction_on_n]
+meta mutual def flatten, flatten_with
+with flatten : expr → tactic (expr × expr)
+| `(%%e₀ * %%e₁) :=
+do (e₀',p₀) ← flatten e₀,
+   flatten_with e₁ e₀ p₀
+| e := prod.mk e <$> to_expr ``(rfl)
+with flatten_with : expr → expr → expr → tactic (expr × expr)
+| `(%%e₁ * %%e₂) e₀ p :=
+do (e₁',p₁) ← flatten_with e₁ e₀ p,
+   flatten_with e₂ e₁' p₁
+| e₁ e₀ p := prod.mk <$> to_expr ``(%%e₀ * %%e₁)
+                     <*> to_expr ``(congr_fun (congr_arg (*) %%p) _ : _ * %%e₁ = %%e₀ * %%e₁)
 
+open tactic.interactive (get_current_field)
+
+meta def factors (t e : expr) : tactic (list expr) :=
+do fn ← mk_mapp ``has_mul.mul [t,none],
+   mk_assoc_pattern fn e
+-- (do v₀ ← mk_mvar,
+--     v₁ ← mk_mvar,
+--     to_expr ``(%%v₀ * %%v₁) >>= unify e,
+--     (++) <$> factors v₀ <*> factors v₁) <|>
+-- pure [e]
+
+meta def opposite (e₀ e₁ : expr) : tactic bool :=
+tt <$ (to_expr ``((%%e₀) ⁻¹) >>= unify e₁) <|>
+pure ff
+
+-- meta def mk_product' : list expr →  tactic expr
+-- | []  := to_expr ``(has_one.one _)
+-- | [x] := pure x
+-- | (x :: xs) :=
+-- do x' ← mk_product' xs,
+--    to_expr ``(%%x' * %%x)
+
+meta def mk_product (t : expr) (es : list expr) : tactic expr :=
+do fn ← mk_mapp ``has_mul.mul [t,none],
+   mk_assoc fn es
+
+meta def cancellation_once : tactic unit :=
+do α ← mk_mvar,
+   g ← to_expr ``(group %%α),
+   (_,inst) ← solve_aux g assumption,
+   x  ← mk_mvar,
+   s  ← mk_mvar,
+   tgt ← target,
+   to_expr ``(%%x ∈ %%s) >>= unify tgt,
+   x ← instantiate_mvars x,
+   (e::es) ← factors α x,
+   let e' := es.ilast,
+   let es' := es.init,
+   b ← opposite e' e,
+   if b then do
+     y  ← mk_product α es',
+     y' ← mk_product α [e,y,e'],
+     fn ← mk_mapp ``has_mul.mul [α,none],
+     assoc ← mk_mapp ``is_associative.assoc [α,fn,none],
+     q ← assoc_refl' fn assoc x y',
+     -- p ← to_expr ``(%%x = %%y') >>= instantiate_mvars,
+     -- (_,q) ← solve_aux p (assoc_refl),
+     rewrite_target q,
+     mk_mapp `is_subgroup.normal' [none,none,e,e',s,none,y] >>= apply,
+     return ()
+   else pure ()
+#check group
+
+meta def assoc_rewrite_with (law : name) (α assoc : expr) : tactic unit :=
+do law ← mk_mapp law [α,none],
+   assoc_rewrite_target law assoc
+
+#check @monoid.mul_assoc _ _
+meta def cancellation_rw : tactic unit :=
+do α ← mk_mvar,
+   g ← to_expr ``(group %%α),
+   (_,inst) ← solve_aux g assumption,
+   assoc ← mk_mapp ``monoid.mul_assoc [α,none],
+   -- g ← mk_mapp ``group [α],
+   (_,inst) ← solve_aux g assumption,
+   assoc_rewrite_with ``mul_left_inv α assoc    <|>
+     assoc_rewrite_with ``mul_right_inv α assoc <|>
+     assoc_rewrite_with ``mul_one α assoc <|>
+     assoc_rewrite_with ``one_mul α assoc <|>
+     (do distr ← mk_mapp ``mul_inv_rev  [α,none],
+         rewrite_target distr  { md := transparency.all }) <|>
+     (do involution ← mk_mapp ``inv_inv  [α,none],
+         rewrite_target involution { md := transparency.all }) <|>
+     (do one_mem ← mk_mapp ``is_submonoid.one_mem [α,none],
+         () <$ apply one_mem)
+
+meta def cancellation : tactic unit :=
+do gs ← get_goals,
+   repeat cancellation_rw,
+   try (cancellation_once >>
+        repeat cancellation_rw),
+   gs' ← get_goals,
+   guard (gs ≠ gs')
+
+meta def mk_def : tactic unit :=
+do f ← get_current_field,
+   apply_quotient_induction_on_n,
+   solve1 $ do
+     vs ← intros,
+     e ← mk_mapp f $ none :: none :: vs.map some,
+     p ← target >>= is_prop,
+     when p $ refine ``(congr_arg mk _),
+     refine (to_pexpr e)
+
+end tactic
+
+run_cmd add_interactive [`apply_quotient_induction_on_n,`cancellation_rw,`cancellation,`mk_def]
+-- set_option trace.app_builder true
+set_option profiler true
 instance [group α] (s : set α) [normal_subgroup s] : group (left_cosets s) :=
 begin
-  refine_struct { one := ↑(1 : α), .. },
+  refine_struct { .. },
   field mul
-  { intros x y, refine quotient.lift_on₂' x y _ _,
-    { intros x y, exact (x * y : α) },
-    { introv hab₁ hab₂, apply quot.sound,
-      apply (is_subgroup.mul_mem_cancel_left s (is_subgroup.inv_mem hab₂)).1,
-      rw [mul_inv_rev, mul_inv_rev, ← mul_assoc (a₂⁻¹ * a₁⁻¹),
-      mul_assoc _ b₂, ← mul_assoc b₂, mul_inv_self, one_mul, mul_assoc (a₂⁻¹)];
-      exact normal_subgroup.normal _ hab₁ _, } },
+  { mk_def,
+    intros, apply quot.sound,
+    change (_ ∈ _),
+    cancellation,
+    apply (is_subgroup.mul_mem_cancel_left s (is_subgroup.inv_mem a_3)).1,
+    cancellation,
+    assumption },
   field inv
-  { intro,
-    apply quotient.lift_on' a (λ a, ((a⁻¹ : α) : left_cosets s))
-           (λ a b hab, quotient.sound' begin
-             show a⁻¹⁻¹ * b⁻¹ ∈ s,
-             rw ← mul_inv_rev,
-             exact is_subgroup.inv_mem (is_subgroup.mem_norm_comm hab)
-           end)  },
+  { mk_def,
+    intros, apply quot.sound,
+    change (_ ∈ _),
+    rw ← is_subgroup.inv_mem_iff s,
+    cancellation,
+    rw is_subgroup.mem_norm_comm_iff,
+    assumption },
   all_goals
-  { have_field,
-    apply_quotient_induction_on_n,
-    intros, apply congr_arg mk _, apply field },
+  { mk_def },
 end
+
+set_option profiler false
 
 instance [group α] (s : set α) [normal_subgroup s] :
   is_group_hom (mk : α → left_cosets s) := ⟨λ _ _, rfl⟩

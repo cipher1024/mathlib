@@ -443,6 +443,13 @@ get_current_field
 >>= note `field none
 >>  return ()
 
+meta def let_field : tactic unit :=
+propagate_tags $
+get_current_field
+>>= mk_const
+>>= pose `field none
+>>  return ()
+
 /-- `apply_field` functions as `have_field, apply field, clear field` -/
 meta def apply_field : tactic unit :=
 propagate_tags $

@@ -42,4 +42,11 @@ meta def pis : list expr → expr → tactic expr
   pure $ pi pp info t (abstract_local f' uniq)
 | _ f := pure f
 
+meta def lambdas : list expr → expr → tactic expr
+| (e@(local_const uniq pp info _) :: es) f := do
+  t ← infer_type e,
+  f' ← lambdas es f,
+  pure $ lam pp info t (abstract_local f' uniq)
+| _ f := pure f
+
 end tactic

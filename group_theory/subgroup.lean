@@ -124,6 +124,10 @@ by simp at h; exact h
 lemma mem_norm_comm_iff {a b : α} {s : set α} [normal_subgroup s] : a * b ∈ s ↔ b * a ∈ s :=
 iff.intro mem_norm_comm mem_norm_comm
 
+lemma normal' {a b : α} {s : set α} [normal_subgroup s] :
+  ∀ n ∈ s, ∀ g : α, g⁻¹ * n * g ∈ s :=
+by intros; rw [mem_norm_comm_iff, ← mul_assoc]; simp *
+
 /-- The trivial subgroup -/
 def trivial (α : Type*) [group α] : set α := {1}
 
