@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro
 -/
 
-import data.dlist.basic category.basic
+import data.dlist.basic category.basic meta.expr
 
 namespace expr
 open tactic
@@ -49,10 +49,40 @@ namespace tactic
 meta def mk_local (n : name) : expr :=
 expr.local_const n n binder_info.default (expr.const n [])
 
+meta def local_def_value (e : expr) : tactic expr := do
+do (v,_) ← solve_aux `(true) (do
+         (expr.elet n t v _) ← (revert e >> target)
+           | fail format!"{e} is not a local definition",
+         return v),
+   return v
+
 meta def check_defn (n : name) (e : pexpr) : tactic unit :=
 do (declaration.defn _ _ _ d _ _) ← get_decl n,
    e' ← to_expr e,
    guard (d =ₐ e') <|> trace d >> failed
+
+-- meta def compile_eqn (n : name) (univ : list name) (args : list expr) (val : expr) (num : ℕ) : tactic unit :=
+-- do let lhs := (expr.const n $ univ.map level.param).mk_app args,
+--    stmt ← mk_app `eq [lhs,val],
+--    let vs := stmt.list_local_const,
+--    let stmt := stmt.pis vs,
+--    (_,pr) ← solve_aux stmt (tactic.intros >> reflexivity),
+--    add_decl $ declaration.thm (n <.> "equations" <.> to_string (format!"_eqn_{num}")) univ stmt (pure pr)
+
+meta def to_implicit : expr → expr
+| (expr.local_const uniq n bi t) := expr.local_const uniq n binder_info.implicit t
+| e := e
+
+meta def extract_def (n : name) (elab_def : tactic unit) : tactic unit :=
+do cxt ← list.map to_implicit <$> local_context,
+   t ← target,
+   (eqns,d) ← solve_aux t elab_def,
+   d ← instantiate_mvars d,
+   t' ← pis cxt t,
+   d' ← lambdas cxt d,
+   let univ := t'.collect_univ_params,
+   add_decl $ mk_definition n univ t' d',
+   applyc n
 
 meta def exact_dec_trivial : tactic unit := `[exact dec_trivial]
 

@@ -27,8 +27,15 @@ meta def expr.traverse : expr elab → m (expr elab')
  | (elet n e₀ e₁ e₂) := elet n <$> f e₀ <*> f e₁ <*> f e₂
  | (macro mac es) := macro mac <$> mmap f es
 
-meta def expr.list_local_const (e : expr) : list expr :=
-e.fold [] (λ e' _ es, if expr.is_local_constant e' ∧ ¬ e' ∈ es then e' :: es else es)
+meta def expr.is_meta_var : expr → bool
+| (mvar _ _ _) := tt
+| e            := ff
+
+meta def expr.list_local_consts (e : expr) : list expr :=
+e.fold [] (λ e' _ es, if e'.is_local_constant ∧ ¬ e' ∈ es then e' :: es else es)
+
+meta def expr.list_meta_vars (e : expr) : list expr :=
+e.fold [] (λ e' _ es, if e'.is_meta_var ∧ ¬ e' ∈ es then e' :: es else es)
 
 end expr
 
@@ -40,6 +47,13 @@ meta def pis : list expr → expr → tactic expr
   t ← infer_type e,
   f' ← pis es f,
   pure $ pi pp info t (abstract_local f' uniq)
+| _ f := pure f
+
+meta def lambdas : list expr → expr → tactic expr
+| (e@(local_const uniq pp info _) :: es) f := do
+  t ← infer_type e,
+  f' ← lambdas es f,
+  pure $ lam pp info t (abstract_local f' uniq)
 | _ f := pure f
 
 meta def last_explicit_arg : expr → tactic expr
