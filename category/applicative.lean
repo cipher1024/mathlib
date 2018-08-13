@@ -52,6 +52,40 @@ end
 
 end lemmas
 
+namespace const
+open functor
+variables {γ : Type u} [monoid γ]
+
+protected def pure {α} (x : α) : const γ α := (1 : γ)
+protected def seq {α β : Type*} (f : const γ (α → β)) (x : const γ α) : const γ β :=
+(f * x : γ)
+
+instance : applicative (const γ) :=
+{ pure := @const.pure γ _,
+  seq := @const.seq γ _ }
+
+instance : is_lawful_applicative (const γ) :=
+by refine { .. }; intros; simp! [const.seq,const.pure,mul_assoc]
+
+end const
+
+namespace const'
+open functor
+variables {γ : Type u} [add_monoid γ]
+
+protected def pure {α} (x : α) : const' γ α := (0 : γ)
+protected def seq {α β : Type*} (f : const' γ (α → β)) (x : const' γ α) : const' γ β :=
+(f + x : γ)
+
+instance : applicative (const' γ) :=
+{ pure := @const'.pure γ _,
+  seq  := @const'.seq γ _ }
+
+instance : is_lawful_applicative (const' γ) :=
+by refine { .. }; intros; simp! [const'.seq,const'.pure,add_assoc]
+
+end const'
+
 namespace comp
 
 open function (hiding comp)

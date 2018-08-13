@@ -86,17 +86,17 @@ def bicompr (F : Type* → Type*) (G : Type* → Type* → Type*) (α β) :=
 F (G α β)
 
 end bifunctor
-
+open functor
 instance : bifunctor prod :=
 { bimap := @prod.map }
 
 instance : is_lawful_bifunctor prod :=
 by refine { .. }; intros; cases x; refl
 
-instance bifunctor.const : bifunctor (@function.const _ _) :=
+instance bifunctor.const : bifunctor const :=
 { bimap := (λ α α' β β f _, f) }
 
-instance is_lawful_bifunctor.const : is_lawful_bifunctor (@function.const _ _)  :=
+instance is_lawful_bifunctor.const : is_lawful_bifunctor const  :=
 by refine { .. }; intros; refl
 
 instance bifunctor.flip : bifunctor (flip F) :=
