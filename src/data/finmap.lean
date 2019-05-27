@@ -412,6 +412,15 @@ ext_lookup
 instance : decidable_rel (@disjoint α β) :=
 by intros x y; dsimp [disjoint]; apply_instance
 
+lemma disjoint_empty (x : finmap β) : disjoint ∅ x .
+
+@[symm]
+lemma disjoint.symm (x y : finmap β) (h : disjoint x y) : disjoint y x :=
+λ p hy hx, h p hx hy
+
+lemma disjoint.symm_iff (x y : finmap β) : disjoint x y ↔ disjoint y x :=
+⟨ disjoint.symm x y, disjoint.symm y x ⟩
+
 lemma disjoint_union_left (x y z : finmap β) : disjoint (x ∪ y) z ↔ disjoint x z ∧ disjoint y z :=
 by simp [disjoint,finmap.mem_union,or_imp_distrib,forall_and_distrib]
 

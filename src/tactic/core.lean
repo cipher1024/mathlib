@@ -714,6 +714,10 @@ Fails if `intro` cannot be applied. -/
 meta def intros1 : tactic (list expr) :=
 iterate1 intro1 >>= λ p, return (p.1 :: p.2)
 
+meta def iterate_exactly' : ℕ → tactic α → tactic (list α)
+| nat.zero _ := pure []
+| (nat.succ n) tac := (::) <$> tac <*> iterate_exactly' n tac
+
 /-- `successes` invokes each tactic in turn, returning the list of successful results. -/
 meta def successes (tactics : list (tactic α)) : tactic (list α) :=
 list.filter_map id <$> monad.sequence (tactics.map (λ t, try_core t))

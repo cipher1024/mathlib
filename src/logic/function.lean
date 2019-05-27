@@ -11,6 +11,18 @@ universes u v w
 
 namespace function
 
+section curry
+
+variables {α : Type*} {β : α → Type*} {γ : Π a : α, β a → Type*}
+
+def dcurry (f : Π x : sigma β, γ x.1 x.2) (x : α) (y : β x) : γ x y :=
+f ⟨x,y⟩
+
+def duncurry (f : Π x (y : β x), γ x y) (x : sigma β) : γ x.1 x.2 :=
+f x.1 x.2
+
+end curry
+
 section
 variables {α : Sort u} {β : Sort v} {f : α → β}
 

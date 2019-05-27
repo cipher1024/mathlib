@@ -47,6 +47,8 @@ jobs:
       if: type != cron
       env: TASK="check Lean proofs"
       script:
+        - elan toolchain install leanprover-community/lean:nightly
+        - elan override set leanprover-community/lean:nightly
         - travis_long "timeout 2400 leanpkg test" | python scripts/detect_errors.py
 
     - stage: Pre-build-1
@@ -62,6 +64,8 @@ jobs:
       if: type != cron
       env: TASK="check Lean proofs"
       script:
+        - elan toolchain install leanprover-community/lean:nightly
+        - elan override set leanprover-community/lean:nightly
         - travis_long "timeout 2400 leanpkg test" | python scripts/detect_errors.py
 
     - stage: Pre-build-2
@@ -76,6 +80,8 @@ jobs:
       env: TASK="check Lean proofs"
       if: type != cron
       script:
+        - elan toolchain install leanprover-community/lean:nightly
+        - elan override set leanprover-community/lean:nightly
         - travis_long "leanpkg test"
         - lean --recursive --export=mathlib.txt src/
         - travis_long "leanchecker mathlib.txt"

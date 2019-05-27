@@ -3,7 +3,7 @@ Copyright (c) 2014 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Mario Carneiro
 -/
-import logic.basic data.sum data.set.basic algebra.order
+import logic.basic logic.function data.sum data.set.basic algebra.order
 open function
 
 /- TODO: automatic construction of dual definitions / theorems -/
@@ -108,7 +108,17 @@ def monotone (f : α → β) := ∀⦃a b⦄, a ≤ b → f a ≤ f b
 
 theorem monotone_id : @monotone α α _ _ id := assume x y h, h
 
-theorem monotone_const {b : β} : monotone (λ(a:α), b) := assume x y h, le_refl b
+theorem monotone_const (b : β) : monotone (λ a : α, b) := assume x y h, le_refl b
+
+lemma monotone_ite {f g : α → β} {p : Prop} {h : decidable p}
+  (hf : monotone f) (hg : monotone g) :
+  monotone (λ x, @ite _ h _ (f x) (g x)) :=
+by intros x y h; dsimp; split_ifs; [apply hf h, apply hg h]
+
+lemma monotone_dite {p : Prop} {h : decidable p} {f : α → p → β} {g : α → ¬ p → β}
+  (hf : ∀ h, monotone $ λ x, f x h) (hg : ∀ h, monotone $ λ x, g x h) :
+  monotone (λ x, @dite _ h _ (f x) (g x)) :=
+by intros x y h; dsimp; split_ifs; [apply hf _ h, apply hg _ h]
 
 protected theorem monotone.comp {g : β → γ} {f : α → β} (m_g : monotone g) (m_f : monotone f) :
   monotone (g ∘ f) :=
@@ -162,6 +172,11 @@ end order_dual
 
 /- order instances on the function space -/
 
+instance pi.preorder' {ι : Prop} {α : ι → Type v} [∀i, preorder (α i)] : preorder (Πi, α i) :=
+{ le       := λx y, ∀i, x i ≤ y i,
+  le_refl  := assume a i, le_refl (a i),
+  le_trans := assume a b c h₁ h₂ i, le_trans (h₁ i) (h₂ i) }
+
 instance pi.preorder {ι : Type u} {α : ι → Type v} [∀i, preorder (α i)] : preorder (Πi, α i) :=
 { le       := λx y, ∀i, x i ≤ y i,
   le_refl  := assume a i, le_refl (a i),
@@ -185,6 +200,20 @@ theorem monotone_app (f : β → α → γ) (b : β) (m : monotone (λa b, f b a
 assume a a' h, m h b
 
 end monotone
+
+section monotone
+variables (α)
+
+lemma monotone_curry' (β : α → Type*) (γ : Π a : α, β a → Type*)
+  [∀ x y, preorder $ γ x y] : monotone $ @curry' α β γ :=
+λ x y h a b, h ⟨a,b⟩
+
+lemma monotone_uncurry' (β : α → Type*) (γ : Π a : α, β a → Type*)
+  [∀ x y, preorder $ γ x y] : monotone $ @uncurry' α β γ :=
+λ x y h a, h a.1 a.2
+
+end monotone
+
 
 def preorder.lift {α β} (f : α → β) (i : preorder β) : preorder α :=
 by exactI
@@ -225,6 +254,9 @@ instance subtype.decidable_linear_order {α} [i : decidable_linear_order α] (p 
   decidable_linear_order (subtype p) :=
 decidable_linear_order.lift subtype.val subtype.val_injective i
 
+lemma subtype.monotone_val [preorder α] {P : α → Prop} : monotone $ @subtype.val α P :=
+λ a b h, h
+
 instance prod.has_le (α : Type u) (β : Type v) [has_le α] [has_le β] : has_le (α × β) :=
 ⟨λp q, p.1 ≤ q.1 ∧ p.2 ≤ q.2⟩
 
@@ -242,6 +274,17 @@ instance prod.partial_order (α : Type u) (β : Type v) [partial_order α] [part
 { le_antisymm := assume ⟨a, b⟩ ⟨c, d⟩ ⟨hac, hbd⟩ ⟨hca, hdb⟩,
     prod.ext (le_antisymm hac hca) (le_antisymm hbd hdb),
   .. prod.preorder α β }
+
+namespace prod
+
+variables [preorder α]
+          [preorder β]
+
+lemma monotone_fst : monotone $ @fst α β := λ x y h, h.1
+
+lemma monotone_snd : monotone $ @snd α β := λ x y h, h.2
+
+end prod
 
 /- additional order classes -/
 
