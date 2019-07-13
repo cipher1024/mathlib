@@ -77,13 +77,22 @@ def list.mpartition {f : Type → Type} [monad f] {α : Type} (p : α → f bool
 mcond (p x) (prod.map (cons x) id <$> list.mpartition xs)
             (prod.map id (cons x) <$> list.mpartition xs)
 
+run_cmd mk_simp_attr `monad_norm [`functor_norm]
+
+@[monad_norm]
+lemma map_eq_bind_pure (x : m α) {f : α → β} : f <$> x = (x >>= λa, pure $ f a) :=
+by rw [← bind_pure_comp_eq_map]; refl
+
+@[monad_norm]
 lemma map_bind (x : m α) {g : α → m β} {f : β → γ} : f <$> (x >>= g) = (x >>= λa, f <$> g a) :=
 by rw [← bind_pure_comp_eq_map,bind_assoc]; simp [bind_pure_comp_eq_map]
 
+@[monad_norm]
 lemma seq_bind_eq (x : m α) {g : β → m γ} {f : α → β} : (f <$> x) >>= g = (x >>= g ∘ f) :=
 show bind (f <$> x) g = bind x (g ∘ f),
 by rw [← bind_pure_comp_eq_map, bind_assoc]; simp [pure_bind]
 
+@[monad_norm]
 lemma seq_eq_bind_map {x : m α} {f : m (α → β)} : f <*> x = (f >>= (<$> x)) :=
 (bind_map_eq_seq m f x).symm
 
