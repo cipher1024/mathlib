@@ -418,8 +418,11 @@ do tgt ← target,
    solve1 $ tactic.exact (t v r),
    prod.mk <$> tactic.intro x <*> tactic.intro h
 
-private meta def hide_meta_vars (tac : list expr → tactic unit) : tactic unit :=
-focus1 $
+private meta def hide_meta_vars (cfg : mono_cfg) (tac : list expr → tactic unit) : tactic unit :=
+if cfg.unify then
+  do ctx ← local_context,
+     tac ctx
+else focus1 $
 do tgt ← target >>= instantiate_mvars,
    tactic.change tgt,
    ctx ← local_context,
@@ -428,11 +431,11 @@ do tgt ← target >>= instantiate_mvars,
              do h ← get_unused_name `h,
                 x ← get_unused_name `x,
                 prod.snd <$> generalize' h v x) vs,
-     tac ctx;
-     vs'.mmap' (try ∘ tactic.subst)
+   tac ctx;
+   vs'.mmap' (try ∘ tactic.subst)
 
-meta def hide_meta_vars' (tac : itactic) : itactic :=
-hide_meta_vars $ λ _, tac
+-- meta def hide_meta_vars' (tac : itactic) : itactic :=
+-- hide_meta_vars $ λ _, tac
 
 end config
 
@@ -513,7 +516,7 @@ associative operator and if the operator is commutative
 -/
 meta def ac_mono_aux (cfg : mono_cfg := { mono_cfg . }) :
   tactic unit :=
-hide_meta_vars $ λ asms,
+hide_meta_vars cfg $ λ asms,
 do try `[dunfold has_sub.sub algebra.sub],
    tgt ← target >>= instantiate_mvars,
    (l,r,id_rs,g) ← ac_monotonicity_goal cfg tgt

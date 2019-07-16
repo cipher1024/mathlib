@@ -152,7 +152,7 @@ meta def eval_expr' (α : Type*) [_inst_1 : reflected α] (e : expr) : tactic α
 mk_app ``id [e] >>= eval_expr α
 
 /-- `mk_fresh_name` returns identifiers starting with underscores,
-which are not legal when emitted by tactic programs. `mk_user_fresh_name` 
+which are not legal when emitted by tactic programs. `mk_user_fresh_name`
 turns the useful source of random names provided by `mk_fresh_name` into
 names which are usable by tactic programs.
 
