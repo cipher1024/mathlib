@@ -321,7 +321,7 @@ meta def retrieve {α} (tac : tactic α) : tactic α :=
 
 /-- Repeat a tactic at least once, calling it recursively on all subgoals,
   until it fails. This tactic fails if the first invocation fails. -/
-meta def repeat1 (t : tactic unit) : tactic unit := t; repeat t
+meta def repeat1 (t : tactic unit) : tactic unit := t; iterate t
 
 /-- `iterate_range m n t`: Repeat the given tactic at least `m` times and
   at most `n` times or until `t` fails. Fails if `t` does not run at least m times. -/

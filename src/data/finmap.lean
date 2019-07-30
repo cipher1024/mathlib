@@ -140,6 +140,23 @@ def singleton (a : α) (b : β a) : finmap β :=
 @[simp] lemma mem_singleton (x y : α) (b : β y) : x ∈ singleton y b ↔ x = y :=
 by simp only [singleton]; erw [mem_cons_eq,mem_nil_iff,or_false]
 
+
+/- disjoint -/
+
+def disjoint (s₁ s₂ : finmap β) :=
+∀ x ∈ s₁, ¬ x ∈ s₂
+
+lemma disjoint_empty (x : finmap β) : disjoint ∅ x .
+
+lemma empty_disjoint (x : finmap β) : disjoint x ∅ .
+
+@[symm]
+lemma disjoint.symm {x y : finmap β} (h : disjoint x y) : disjoint y x :=
+λ p hy hx, h p hx hy
+
+lemma disjoint.symm_iff {x y : finmap β} : disjoint x y ↔ disjoint y x :=
+⟨ disjoint.symm, disjoint.symm ⟩
+
 variables [decidable_eq α]
 
 instance has_decidable_eq [∀ a, decidable_eq (β a)] : decidable_eq (finmap β)
@@ -372,6 +389,10 @@ by rw ← empty_to_finmap; simp [- empty_to_finmap, alist.to_finmap_eq,union_to_
 induction_on s₁ $ λ s₁,
 by rw ← empty_to_finmap; simp [- empty_to_finmap, alist.to_finmap_eq,union_to_finmap,alist.union_assoc]
 
+theorem singleton_union {s₁ : finmap β} (a : α) (b : β a) : singleton a b ∪ s₁ = s₁.insert a b :=
+induction_on s₁ $ λ s₁,
+by simp [singleton,alist.singleton]; refl
+
 theorem ext_lookup {s₁ s₂ : finmap β} : (∀ x, s₁.lookup x = s₂.lookup x) → s₁ = s₂ :=
 induction_on₂ s₁ s₂ $ λ s₁ s₂ h,
 by simp only [alist.lookup, lookup_to_finmap] at h;
@@ -388,26 +409,14 @@ ext_lookup
 
 /- disjoint -/
 
-def disjoint (s₁ s₂ : finmap β) :=
-∀ x ∈ s₁, ¬ x ∈ s₂
-
-instance : decidable_rel (@disjoint α β _) :=
+instance : decidable_rel (@disjoint α β) :=
 by intros x y; dsimp [disjoint]; apply_instance
-
-lemma disjoint_empty (x : finmap β) : disjoint ∅ x .
-
-@[symm]
-lemma disjoint.symm (x y : finmap β) (h : disjoint x y) : disjoint y x :=
-λ p hy hx, h p hx hy
-
-lemma disjoint.symm_iff (x y : finmap β) : disjoint x y ↔ disjoint y x :=
-⟨ disjoint.symm x y, disjoint.symm y x ⟩
 
 lemma disjoint_union_left (x y z : finmap β) : disjoint (x ∪ y) z ↔ disjoint x z ∧ disjoint y z :=
 by simp [disjoint,finmap.mem_union,or_imp_distrib,forall_and_distrib]
 
 lemma disjoint_union_right (x y z : finmap β) : disjoint x (y ∪ z) ↔ disjoint x y ∧ disjoint x z :=
-by rw [disjoint.symm_iff,disjoint_union_left,disjoint.symm_iff _ x,disjoint.symm_iff _ x]
+by rw [disjoint.symm_iff,disjoint_union_left,@disjoint.symm_iff _ _ _ x,@disjoint.symm_iff _ _ _ x]
 
 theorem union_comm_of_disjoint {s₁ s₂ : finmap β} : disjoint s₁ s₂ → s₁ ∪ s₂ = s₂ ∪ s₁ :=
 induction_on₂ s₁ s₂ $ λ s₁ s₂,

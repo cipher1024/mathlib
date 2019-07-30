@@ -418,7 +418,7 @@ do tgt ← target,
    solve1 $ tactic.exact (t v r),
    prod.mk <$> tactic.intro x <*> tactic.intro h
 
-private meta def hide_meta_vars (cfg : mono_cfg) (tac : list expr → tactic unit) : tactic unit :=
+meta def hide_meta_vars (cfg : mono_cfg) (tac : list expr → tactic unit) : tactic unit :=
 if cfg.unify then
   do ctx ← local_context,
      tac ctx

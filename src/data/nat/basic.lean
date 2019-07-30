@@ -149,6 +149,9 @@ theorem eq_of_lt_succ_of_not_lt {a b : ℕ} (h1 : a < b + 1) (h2 : ¬ a < b) : a
 have h3 : a ≤ b, from le_of_lt_succ h1,
 or.elim (eq_or_lt_of_not_lt h2) (λ h, h) (λ h, absurd h (not_lt_of_ge h3))
 
+protected theorem lt_of_add_lt_add_right {k n m : ℕ} (h : n + k < m + k) : n < m :=
+nat.lt_of_add_lt_add_left (by convert h using 1; apply add_comm)
+
 protected theorem le_sub_add (n m : ℕ) : n ≤ n - m + m :=
 or.elim (le_total n m)
   (assume : n ≤ m, begin rw [sub_eq_zero_of_le this, zero_add], exact this end)

@@ -40,6 +40,11 @@ Otherwise it returns `default`. -/
 meta def find_def {key value} (default : value) (m : rb_map key value) (k : key) :=
 (m.find k).get_or_else default
 
+meta def insert_if_absent {α β} (m : rb_map α β) (k : α) (x : β) : rb_map α β :=
+if m.contains k
+  then m
+  else m.insert k x
+
 /-- `ifind m key` returns the value corresponding to `key` in `m`, if it exists.
 Otherwise it returns the default value of `value`. -/
 meta def ifind {key value} [inhabited value] (m : rb_map key value) (k : key) : value :=
