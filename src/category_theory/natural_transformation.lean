@@ -13,6 +13,7 @@ Introduces notations
 -/
 
 import category_theory.functor
+import tactic.reassoc_axiom
 
 namespace category_theory
 
@@ -33,7 +34,7 @@ structure nat_trans (F G : C ⥤ D) : Type (max u₁ v₂) :=
 (naturality' : ∀ {{X Y : C}} (f : X ⟶ Y), (F.map f) ≫ (app Y) = (app X) ≫ (G.map f) . obviously)
 
 restate_axiom nat_trans.naturality'
-attribute [simp] nat_trans.naturality
+attribute [simp, reassoc] nat_trans.naturality
 
 namespace nat_trans
 
@@ -42,6 +43,9 @@ protected def id (F : C ⥤ D) : nat_trans F F :=
 { app := λ X, 𝟙 (F.obj X) }
 
 @[simp] lemma id_app' (F : C ⥤ D) (X : C) : (nat_trans.id F).app X = 𝟙 (F.obj X) := rfl
+
+@[reassoc] lemma naturality_symm {F G : C ⥤ D} (t : nat_trans F G) {X Y : C} (f : X ⟶ Y) :
+  t.app X ≫ G.map f = F.map f ≫ t.app Y := (naturality t f).symm
 
 open category
 open category_theory.functor
@@ -55,8 +59,9 @@ def vcomp (α : nat_trans F G) (β : nat_trans G H) : nat_trans F H :=
   naturality' :=
   begin
     /- `obviously'` says: -/
-    intros, simp, rw [←assoc, naturality, assoc, ←naturality],
-  end }
+    intros, simp
+  end
+ }
 
 -- We'll want to be able to prove that two natural transformations are equal if they are componentwise equal.
 @[ext] lemma ext {α β : nat_trans F G} (w : ∀ X : C, α.app X = β.app X) : α = β :=

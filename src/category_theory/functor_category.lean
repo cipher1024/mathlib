@@ -42,6 +42,7 @@ lemma congr_app {α β : F ⟶ G} (h : α = β) (X : C) : α.app X = β.app X :=
 
 include ℰ
 
+@[reassoc]
 lemma app_naturality {F G : C ⥤ (D ⥤ E)} (T : F ⟶ G) (X : C) {Y Z : D} (f : Y ⟶ Z) :
   ((F.obj X).map f) ≫ ((T.app X).app Z) = ((T.app X).app Y) ≫ ((G.obj X).map f) :=
 (T.app X).naturality f

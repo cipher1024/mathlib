@@ -41,7 +41,7 @@ def mzip_with'  (f : α → β → F γ) : list α → list β → F punit
 
 variables [is_lawful_applicative F]
 
-attribute [functor_norm] seq_assoc pure_seq_eq_map
+attribute [functor_norm] seq_assoc pure_seq_eq_map map_pure
 
 @[simp] theorem pure_id'_seq (x : F α) : pure (λx, x) <*> x = x :=
 pure_id_seq x

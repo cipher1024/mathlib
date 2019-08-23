@@ -405,6 +405,24 @@ class has_limit (F : J ⥤ C) :=
 (cone : cone F)
 (is_limit : is_limit cone . tactic.apply_instance)
 
+-- def is_limit_postcompose [has_limit F] (G : J ⥤ C) (f : F ⟶ G) (c : cone F) (h : is_limit c) : is_limit $ (cones.postcompose f).obj c :=
+-- { lift := λ s, f.app _ ≫ _ }
+
+-- def postcompose_has_limit [has_limit F] (G : J ⥤ C) (f : F ⟶ G) : has_limit G :=
+-- { cone := (cones.postcompose f).obj (has_limit.cone F),
+--   is_limit := { lift := λ s, (has_limit.is_limit F).lift s ≫ _ } }
+
+-- def has_limit [has_limit F] (G : J ⥤ C) (f : F ≅ G) : has_limit G :=
+-- { cone := (cones.postcompose f.hom).obj (has_limit.cone F),
+--   is_limit := (is_limit_iso_unique_cone_morphism).inv $ λ s,
+--     by { constructor, swap, constructor,
+--          have h₀ : is_limit _ := (has_limit.is_limit F),
+--          have h₁ := is_limit_iso_unique_cone_morphism.hom h₀,
+--          have := h₀,
+--          dsimp [limits.cones.postcompose]}⟩ }
+-- { cone := (cones.postcompose f).obj (has_limit.cone F),
+--   is_limit := { lift := λ s, (has_limit.is_limit F).lift s ≫ _ } }
+
 variables (J C)
 
 /-- `C` has limits of shape `J` if we have chosen a particular limit of
@@ -616,6 +634,10 @@ variables {F} {G : J ⥤ C} (α : F ⟶ G)
 
 @[simp, reassoc] lemma lim.map_π (j : J) : lim.map α ≫ limit.π G j = limit.π F j ≫ α.app j :=
 by apply is_limit.fac
+
+@[simp] lemma lim.map_π_assoc (j : J) (W) (f : _ ⟶ W) :
+  lim.map α ≫ limit.π G j ≫ f = limit.π F j ≫ α.app j ≫ f :=
+by rw [←category.assoc, lim.map_π, category.assoc]
 
 @[simp] lemma limit.lift_map (c : cone F) :
   limit.lift F c ≫ lim.map α = limit.lift G ((cones.postcompose α).obj c) :=

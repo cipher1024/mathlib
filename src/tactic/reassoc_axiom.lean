@@ -97,6 +97,21 @@ do d ← get_decl n,
    add_decl $ declaration.thm n' d.univ_params t'' (pure pr'),
    copy_attribute `simp n tt n'
 
+meta def flip_axiom (n : name) (n' : name := n.append_suffix "_symm") : tactic unit :=
+do d ← get_decl n,
+   let ls := d.univ_params.map level.param,
+   let c := @expr.const tt n ls,
+   (vs,t) ← infer_type c >>= mk_local_pis,
+   (vs',t) ← whnf t >>= mk_local_pis,
+   let vs := vs ++ vs',
+   (lhs,rhs) ← match_eq t,
+   let c' := c.mk_app vs,
+   pr ← mk_eq_symm c',
+   t' ← mk_app `eq [rhs,lhs],
+   t'' ← pis vs t',
+   pr' ← lambdas vs pr,
+   add_decl $ declaration.thm n' d.univ_params t'' (pure pr')
+
 /--
 On the following lemma:
 ```
@@ -119,6 +134,15 @@ meta def reassoc_attr : user_attribute unit (option name) :=
   after_set := some (λ n _ _,
     do some n' ← reassoc_attr.get_param n | reassoc_axiom n (n.append_suffix "_assoc"),
        reassoc_axiom n $ n.get_prefix ++ n' ) }
+
+@[user_attribute]
+meta def flip_attr : user_attribute unit (option name) :=
+{ name := `flip,
+  descr := "create a companion lemma reversed through symmetry",
+  parser := optional ident,
+  after_set := some (λ n _ _,
+    do some n' ← reassoc_attr.get_param n | flip_axiom n,
+       flip_axiom n $ n.get_prefix ++ n' ) }
 
 /--
 ```

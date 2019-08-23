@@ -66,7 +66,13 @@ section
 variables {C : Type u₁} [𝒞 : category.{v₁} C]
           {D : Type u₂} [𝒟 : category.{v₂} D]
           {E : Type u₃} [ℰ : category.{v₃} E]
-include 𝒞 𝒟 ℰ
+include 𝒞 𝒟
+
+@[reassoc]
+lemma map_comp_symm (F : C ⥤ D) {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z) : (F.map f) ≫ (F.map g) = F.map (f ≫ g) :=
+(map_comp F f g).symm
+
+include ℰ
 
 /--
 `F ⋙ G` is the composition of a functor `F` and a functor `G` (`F` first, then `G`).

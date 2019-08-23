@@ -7,6 +7,7 @@ import category_theory.products.basic
 import category_theory.natural_isomorphism
 import tactic.basic
 import tactic.slice
+import tactic.reassoc_axiom
 
 open category_theory
 
@@ -96,14 +97,13 @@ def tensor_iso {C : Type u} {X Y X' Y' : C} [category.{v} C] [monoidal_category.
   hom_inv_id' := by rw [←tensor_comp, iso.hom_inv_id, iso.hom_inv_id, ←tensor_id],
   inv_hom_id' := by rw [←tensor_comp, iso.inv_hom_id, iso.inv_hom_id, ←tensor_id] }
 
-infixr ` ⊗ `:70 := tensor_iso
-
 namespace monoidal_category
 
 section
 
 variables {C : Type u} [category.{v} C] [𝒞 : monoidal_category.{v} C]
 include 𝒞
+infixr ` ⊗ `:70 := tensor_iso
 
 instance tensor_is_iso {W X Y Z : C} (f : W ⟶ X) [is_iso f] (g : Y ⟶ Z) [is_iso g] : is_iso (f ⊗ g) :=
 { ..(as_iso f ⊗ as_iso g) }
@@ -140,7 +140,7 @@ by { rw ←tensor_comp, simp }
   ((𝟙 Y) ⊗ f) ≫ (g ⊗ (𝟙 X)) = g ⊗ f :=
 by { rw [←tensor_comp], simp }
 
-@[simp] lemma tensor_id_comp_id_tensor (f : W ⟶ X) (g : Y ⟶ Z) :
+@[simp, reassoc] lemma tensor_id_comp_id_tensor (f : W ⟶ X) (g : Y ⟶ Z) :
   (g ⊗ (𝟙 W)) ≫ ((𝟙 Z) ⊗ f) = g ⊗ f :=
 by { rw [←tensor_comp], simp }
 
@@ -297,6 +297,7 @@ by rw [←tensor_right_iff, comp_tensor_id, right_unitor_product_aux]
     ((ρ_ (X ⊗ Y)).inv) :=
 eq_of_inv_eq_inv (by simp)
 
+@[reassoc]
 lemma associator_inv_naturality {X Y Z X' Y' Z' : C} (f : X ⟶ X') (g : Y ⟶ Y') (h : Z ⟶ Z') :
   (f ⊗ (g ⊗ h)) ≫ (α_ X' Y' Z').inv = (α_ X Y Z).inv ≫ ((f ⊗ g) ⊗ h) :=
 begin
@@ -405,5 +406,69 @@ nat_iso.of_components
 end
 
 end monoidal_category
+
+class symmetric_monoidal_category (C : Type u) [𝒞 : category.{v} C]
+extends monoidal_category C :=
+(braiding : Π X Y : C, X ⊗ Y ⟶ Y ⊗ X)
+(braiding_inv' : Π X Y : C, braiding X Y ≫ braiding Y X = 𝟙 _ . obviously)
+(notation `B_` := braiding)
+(braiding_nat' (X X' Y Y' : C) (f : X ⟶ X') (g : Y ⟶ Y') :
+  (g ⊗ f) ≫ B_ Y' X' = B_ Y X ≫ (f ⊗ g) . obviously)
+(hexagon₀' : Π X Y Z : C, (braiding X Y ⊗ 𝟙 Z) ≫ (α_ _ _ _).hom ≫ (𝟙 _ ⊗ braiding X Z) =
+                         (α_ _ _ _).hom ≫ braiding _ _ ≫ (α_ _ _ _).hom . obviously)
+(hexagon₁' : Π X Y Z : C, (𝟙 X ⊗ braiding Y Z) ≫ (α_ _ _ _).inv ≫ (braiding X _ ⊗ 𝟙 _) =
+                         (α_ _ _ _).inv ≫ braiding _ _ ≫ (α_ _ _ _).inv . obviously)
+
+restate_axiom symmetric_monoidal_category.braiding_inv'
+restate_axiom symmetric_monoidal_category.hexagon₀'
+restate_axiom symmetric_monoidal_category.hexagon₁'
+restate_axiom symmetric_monoidal_category.braiding_nat'
+attribute [simp, reassoc] symmetric_monoidal_category.braiding_inv
+                          symmetric_monoidal_category.hexagon₀
+                          symmetric_monoidal_category.hexagon₁
+                          symmetric_monoidal_category.braiding_nat
+
+notation `γ_` := symmetric_monoidal_category.braiding
+
+namespace symmetric_monoidal_category
+variables {C : Type u} [𝒞 : category.{v} C] [symmetric_monoidal_category C]
+include 𝒞
+
+open monoidal_category
+
+instance {X Y : C} : is_iso (braiding X Y) :=
+{ inv := braiding Y X }
+
+def braid (X Y : C) : X ⊗ Y ≅ Y ⊗ X :=
+as_iso (braiding X Y)
+
+#check hexagon₀
+#check @triangle_assoc_comp_right
+#check @eq_comp_inv
+
+lemma brainding_left_id (X : C) :
+  γ_ X (𝟙_ C) ≫ (λ_ X).hom = (ρ_ X).hom :=
+begin
+  rw [← tensor_left_iff,id_tensor_comp,← triangle_assoc_comp_right],
+  rw [← cancel_mono (γ_ (𝟙_ C) X),assoc,assoc],
+  haveI : is_iso (γ_ (𝟙_ C) (𝟙_ C) ⊗ 𝟙 X) := sorry,
+  have : (γ_ (𝟙_ C) (𝟙_ C) ⊗ 𝟙 X) = (as_iso (γ_ (𝟙_ C) (𝟙_ C) ⊗ 𝟙 X)).hom, admit,
+  have hh := hexagon₁ C (𝟙_ C) X (𝟙_ C),
+  rw [this,← assoc,← eq_comp_inv] at hh,
+  rw [reassoc_of hh],
+  have : is_iso.inv (γ_ (𝟙_ C) (𝟙_ C) ⊗ 𝟙 X) = is_iso.inv (γ_ (𝟙_ C) (𝟙_ C)) ⊗ 𝟙 X, admit,
+  simp *,
+
+done,
+  rw [← tensor_right_iff,← triangle_assoc_comp_left],
+  rw [← cancel_epi (γ_ (𝟙_ C) (X ⊗ 𝟙_ C)), ← cancel_epi (α_ (𝟙_ C) X (𝟙_ C)).hom],
+  rw [← hexagon₀_assoc],
+
+  done,
+  rw [← tensor_right_iff,← triangle_assoc_comp_left, ← cancel_epi (B_ (𝟙_ C) (X ⊗ 𝟙_ C)), ← cancel_epi (α_ (𝟙_ C) X (𝟙_ C)).hom,← hexagon₀_assoc],
+  rw [← braiding_nat,← id_tensor_comp],
+end
+
+end symmetric_monoidal_category
 
 end category_theory
