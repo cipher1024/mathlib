@@ -33,59 +33,109 @@ lemma has_Sup_to_nonempty (α) [has_Sup α] : nonempty α := ⟨Sup ∅⟩
 notation `⨆` binders `, ` r:(scoped f, supr f) := r
 notation `⨅` binders `, ` r:(scoped f, infi f) := r
 
-/-- A complete lattice is a bounded lattice which
-  has suprema and infima for every subset. -/
-class complete_lattice (α : Type u) extends bounded_lattice α, has_Sup α, has_Inf α :=
+meta def prove_default_bounds : tactic unit :=
+`[ intro, apply Sup_le, exact λ b, false.elim ] <|>
+`[ intro, apply le_Sup, exact  (mem_univ _) ] <|>
+`[ intro, apply Inf_le, exact  (mem_univ _) ] <|>
+`[ intro, apply le_Inf, exact  λ b, false.elim ]
+
+class complete_semilattice_sup (α : Type u)
+extends semilattice_sup α, semilattice_sup_bot α, semilattice_sup_top α, has_Sup α :=
 (le_Sup : ∀s, ∀a∈s, a ≤ Sup s)
 (Sup_le : ∀s a, (∀b∈s, b ≤ a) → Sup s ≤ a)
+-- (to_semilattice_sup_bot := _)
+(bot := Sup ∅)
+(top := Sup univ)
+-- (bot_le : _ . prove_default_bounds)
+-- (le_top := λ a, Sup_le _ _ (λ b, false.elim))
+
+-- section complete_semilattice_sup
+-- open complete_semilattice_sup
+-- variables [𝓛 : complete_semilattice_sup α]
+
+-- @[priority 0]
+-- instance : semilattice_sup_bot α :=
+-- { bot := Sup ∅,
+--   bot_le := λ a, Sup_le _ _ $ λ b, false.elim,
+--   .. 𝓛 }
+
+-- @[priority 0]
+-- instance : semilattice_sup_top α :=
+-- { top := Sup univ,
+--   le_top := λ a, le_Sup _ _ (mem_univ _),
+--   .. 𝓛 }
+
+-- end complete_semilattice_sup
+
+class complete_semilattice_inf (α : Type u)
+extends semilattice_inf α, semilattice_inf_bot α, semilattice_inf_top α, has_Inf α :=
 (Inf_le : ∀s, ∀a∈s, Inf s ≤ a)
 (le_Inf : ∀s a, (∀b∈s, a ≤ b) → a ≤ Inf s)
+(bot := Inf univ)
+(top := Inf ∅)
+-- (bot_le := λ a, Inf_le _ _ (mem_univ _))
+-- (le_top := λ a, le_Inf _ _ $ λ b, false.elim)
+
+-- section complete_semilattice_inf
+-- open complete_semilattice_inf
+-- variables [𝓛 : complete_semilattice_inf α]
+
+-- @[priority 0]
+-- instance : semilattice_inf_bot α :=
+-- { bot := Inf univ,
+--   bot_le := λ a, Inf_le _ _ (mem_univ _),
+--   .. 𝓛 }
+
+-- @[priority 0]
+-- instance : semilattice_inf_top α :=
+-- { top := Inf ∅,
+--   le_top := λ a, le_Inf _ _ $ λ b, false.elim,
+--   .. 𝓛 }
+
+-- end complete_semilattice_inf
+
+/-- A complete lattice is a bounded lattice which
+  has suprema and infima for every subset. -/
+class complete_lattice (α : Type u)
+extends complete_semilattice_inf α, complete_semilattice_sup α, bounded_lattice α
+-- extends bounded_lattice α, has_Sup α, has_Inf α :=
+--  (le_Sup : ∀s, ∀a∈s, a ≤ Sup s)
+--  (Sup_le : ∀s a, (∀b∈s, b ≤ a) → Sup s ≤ a)
+--  (Inf_le : ∀s, ∀a∈s, Inf s ≤ a)
+--  (le_Inf : ∀s a, (∀b∈s, a ≤ b) → a ≤ Inf s)
+
+-- instance [𝓛 : complete_lattice α] : bounded_lattice α :=
+-- { bot := Inf univ,
+--   top := Sup univ,
+--   bot_le := λ a, complete_lattice.Inf_le _ _ trivial,
+--   le_top := λ a, complete_lattice.le_Sup _ _ trivial,
+--   .. 𝓛 }
 
 /-- A complete linear order is a linear order whose lattice structure is complete. -/
 class complete_linear_order (α : Type u) extends complete_lattice α, decidable_linear_order α
 
 section
-variables [complete_lattice α] {s t : set α} {a b : α}
+variables [complete_semilattice_sup α] {s t : set α} {a b : α}
 
-@[ematch] theorem le_Sup : a ∈ s → a ≤ Sup s := complete_lattice.le_Sup s a
+@[ematch] theorem le_Sup : a ∈ s → a ≤ Sup s := complete_semilattice_sup.le_Sup s a
 
-theorem Sup_le : (∀b∈s, b ≤ a) → Sup s ≤ a := complete_lattice.Sup_le s a
-
-@[ematch] theorem Inf_le : a ∈ s → Inf s ≤ a := complete_lattice.Inf_le s a
-
-theorem le_Inf : (∀b∈s, a ≤ b) → a ≤ Inf s := complete_lattice.le_Inf s a
+theorem Sup_le : (∀b∈s, b ≤ a) → Sup s ≤ a := complete_semilattice_sup.Sup_le s a
 
 theorem le_Sup_of_le (hb : b ∈ s) (h : a ≤ b) : a ≤ Sup s :=
 le_trans h (le_Sup hb)
 
-theorem Inf_le_of_le (hb : b ∈ s) (h : b ≤ a) : Inf s ≤ a :=
-le_trans (Inf_le hb) h
-
 theorem Sup_le_Sup (h : s ⊆ t) : Sup s ≤ Sup t :=
 Sup_le (assume a, assume ha : a ∈ s, le_Sup $ h ha)
-
-theorem Inf_le_Inf (h : s ⊆ t) : Inf t ≤ Inf s :=
-le_Inf (assume a, assume ha : a ∈ s, Inf_le $ h ha)
 
 @[simp] theorem Sup_le_iff : Sup s ≤ a ↔ (∀b ∈ s, b ≤ a) :=
 ⟨assume : Sup s ≤ a, assume b, assume : b ∈ s,
   le_trans (le_Sup ‹b ∈ s›) ‹Sup s ≤ a›,
   Sup_le⟩
 
-@[simp] theorem le_Inf_iff : a ≤ Inf s ↔ (∀b ∈ s, a ≤ b) :=
-⟨assume : a ≤ Inf s, assume b, assume : b ∈ s,
-  le_trans ‹a ≤ Inf s› (Inf_le ‹b ∈ s›),
-  le_Inf⟩
-
--- how to state this? instead a parameter `a`, use `∃a, a ∈ s` or `s ≠ ∅`?
-theorem Inf_le_Sup (h : a ∈ s) : Inf s ≤ Sup s :=
-by have := le_Sup h; finish
---Inf_le_of_le h (le_Sup h)
-
 -- TODO: it is weird that we have to add union_def
 theorem Sup_union {s t : set α} : Sup (s ∪ t) = Sup s ⊔ Sup t :=
 le_antisymm
-  (by finish)
+  (Sup_le $ assume a h, or.rec_on h (le_sup_left_of_le ∘ le_Sup) (le_sup_right_of_le ∘ le_Sup))
   (sup_le (Sup_le_Sup $ subset_union_left _ _) (Sup_le_Sup $ subset_union_right _ _))
 
 /- old proof:
@@ -94,43 +144,13 @@ le_antisymm
   (sup_le (Sup_le_Sup $ subset_union_left _ _) (Sup_le_Sup $ subset_union_right _ _))
 -/
 
-theorem Sup_inter_le {s t : set α} : Sup (s ∩ t) ≤ Sup s ⊓ Sup t :=
-by finish
-/-
-  Sup_le (assume a ⟨a_s, a_t⟩, le_inf (le_Sup a_s) (le_Sup a_t))
--/
-
-theorem Inf_union {s t : set α} : Inf (s ∪ t) = Inf s ⊓ Inf t :=
-le_antisymm
-  (le_inf (Inf_le_Inf $ subset_union_left _ _) (Inf_le_Inf $ subset_union_right _ _))
-  (by finish)
-
-/- old proof:
-le_antisymm
-  (le_inf (Inf_le_Inf $ subset_union_left _ _) (Inf_le_Inf $ subset_union_right _ _))
-  (le_Inf $ assume a h, or.rec_on h (inf_le_left_of_le ∘ Inf_le) (inf_le_right_of_le ∘ Inf_le))
--/
-
-theorem le_Inf_inter {s t : set α} : Inf s ⊔ Inf t ≤ Inf (s ∩ t) :=
-by finish
-/-
-le_Inf (assume a ⟨a_s, a_t⟩, sup_le (Inf_le a_s) (Inf_le a_t))
--/
-
 @[simp] theorem Sup_empty : Sup ∅ = (⊥ : α) :=
 le_antisymm (by finish) (by finish)
 -- le_antisymm (Sup_le (assume _, false.elim)) bot_le
 
-@[simp] theorem Inf_empty : Inf ∅ = (⊤ : α) :=
-le_antisymm (by finish) (by finish)
---le_antisymm le_top (le_Inf (assume _, false.elim))
-
 @[simp] theorem Sup_univ : Sup univ = (⊤ : α) :=
 le_antisymm (by finish) (le_Sup ⟨⟩) -- finish fails because ⊤ ≤ a simplifies to a = ⊤
 --le_antisymm le_top (le_Sup ⟨⟩)
-
-@[simp] theorem Inf_univ : Inf univ = (⊥ : α) :=
-le_antisymm (Inf_le ⟨⟩) bot_le
 
 -- TODO(Jeremy): get this automatically
 @[simp] theorem Sup_insert {a : α} {s : set α} : Sup (insert a s) = a ⊔ Sup s :=
@@ -139,15 +159,59 @@ have Sup {b | b = a} = a,
 calc Sup (insert a s) = Sup {b | b = a} ⊔ Sup s : Sup_union
                   ... = a ⊔ Sup s : by rw [this]
 
+@[simp] theorem Sup_singleton {a : α} : Sup {a} = a :=
+by finish [singleton_def]
+--eq.trans Sup_insert $ by simp
+
+@[simp] theorem Sup_eq_bot : Sup s = ⊥ ↔ (∀a∈s, a = ⊥) :=
+iff.intro
+  (assume h a ha, bot_unique $ h ▸ le_Sup ha)
+  (assume h, bot_unique $ Sup_le $ assume a ha, le_bot_iff.2 $ h a ha)
+
+end
+
+section
+variables [complete_semilattice_inf α] {s t : set α} {a b : α}
+
+@[ematch] theorem Inf_le : a ∈ s → Inf s ≤ a := complete_semilattice_inf.Inf_le s a
+
+theorem le_Inf : (∀b∈s, a ≤ b) → a ≤ Inf s := complete_semilattice_inf.le_Inf s a
+
+theorem Inf_le_of_le (hb : b ∈ s) (h : b ≤ a) : Inf s ≤ a :=
+le_trans (Inf_le hb) h
+
+theorem Inf_le_Inf (h : s ⊆ t) : Inf t ≤ Inf s :=
+le_Inf (assume a, assume ha : a ∈ s, Inf_le $ h ha)
+
+@[simp]
+theorem le_Inf_iff : a ≤ Inf s ↔ (∀b ∈ s, a ≤ b) :=
+⟨assume : a ≤ Inf s, assume b, assume : b ∈ s,
+  le_trans ‹a ≤ Inf s› (Inf_le ‹b ∈ s›),
+  le_Inf⟩
+
+theorem Inf_union {s t : set α} : Inf (s ∪ t) = Inf s ⊓ Inf t :=
+le_antisymm
+  (le_inf (Inf_le_Inf $ subset_union_left _ _) (Inf_le_Inf $ subset_union_right _ _))
+  (le_Inf $ assume a h, or.rec_on h (inf_le_left_of_le ∘ Inf_le) (inf_le_right_of_le ∘ Inf_le))
+
+/- old proof:
+le_antisymm
+  (le_inf (Inf_le_Inf $ subset_union_left _ _) (Inf_le_Inf $ subset_union_right _ _))
+  (le_Inf $ assume a h, or.rec_on h (inf_le_left_of_le ∘ Inf_le) (inf_le_right_of_le ∘ Inf_le))
+-/
+
+@[simp] theorem Inf_empty : Inf ∅ = (⊤ : α) :=
+le_antisymm (by finish) (by finish)
+--le_antisymm le_top (le_Inf (assume _, false.elim))
+
+@[simp] theorem Inf_univ : Inf univ = (⊥ : α) :=
+le_antisymm (Inf_le ⟨⟩) bot_le
+
 @[simp] theorem Inf_insert {a : α} {s : set α} : Inf (insert a s) = a ⊓ Inf s :=
 have Inf {b | b = a} = a,
   from le_antisymm (Inf_le rfl) (le_Inf $ assume b b_eq, b_eq ▸ le_refl _),
 calc Inf (insert a s) = Inf {b | b = a} ⊓ Inf s : Inf_union
                   ... = a ⊓ Inf s : by rw [this]
-
-@[simp] theorem Sup_singleton {a : α} : Sup {a} = a :=
-by finish [singleton_def]
---eq.trans Sup_insert $ by simp
 
 @[simp] theorem Inf_singleton {a : α} : Inf {a} = a :=
 by finish [singleton_def]
@@ -158,10 +222,28 @@ iff.intro
   (assume h a ha, top_unique $ h ▸ Inf_le ha)
   (assume h, top_unique $ le_Inf $ assume a ha, top_le_iff.2 $ h a ha)
 
-@[simp] theorem Sup_eq_bot : Sup s = ⊥ ↔ (∀a∈s, a = ⊥) :=
-iff.intro
-  (assume h a ha, bot_unique $ h ▸ le_Sup ha)
-  (assume h, bot_unique $ Sup_le $ assume a ha, le_bot_iff.2 $ h a ha)
+end
+
+section
+
+variables [complete_lattice α] {s t : set α} {a b : α}
+
+theorem Sup_inter_le {s t : set α} : Sup (s ∩ t) ≤ Sup s ⊓ Sup t :=
+by finish
+/-
+  Sup_le (assume a ⟨a_s, a_t⟩, le_inf (le_Sup a_s) (le_Sup a_t))
+-/
+
+-- how to state this? instead a parameter `a`, use `∃a, a ∈ s` or `s ≠ ∅`?
+theorem Inf_le_Sup (h : a ∈ s) : Inf s ≤ Sup s :=
+by have := le_Sup h; finish
+--Inf_le_of_le h (le_Sup h)
+
+theorem le_Inf_inter {s t : set α} : Inf s ⊔ Inf t ≤ Inf (s ∩ t) :=
+by finish
+/-
+le_Inf (assume a ⟨a_s, a_t⟩, sup_le (Inf_le a_s) (Inf_le a_t))
+-/
 
 end
 
@@ -796,12 +878,26 @@ variable (α : Type*)
 instance [has_Inf α] : has_Sup (order_dual α) := ⟨(Inf : set α → α)⟩
 instance [has_Sup α] : has_Inf (order_dual α) := ⟨(Sup : set α → α)⟩
 
+instance [complete_semilattice_sup α] : complete_semilattice_inf (order_dual α) :=
+{ Inf_le := @complete_semilattice_sup.le_Sup α _,
+  le_Inf := @complete_semilattice_sup.Sup_le α _,
+  bot_le := by lattice.prove_default_bounds,
+  le_top := by lattice.prove_default_bounds,
+  .. order_dual.lattice.semilattice_inf _,
+  .. order_dual.lattice.has_Inf _ }
+
+instance [complete_semilattice_inf α] : complete_semilattice_sup (order_dual α) :=
+{ le_Sup := @complete_semilattice_inf.Inf_le α _,
+  Sup_le := @complete_semilattice_inf.le_Inf α _,
+  bot_le := by lattice.prove_default_bounds,
+  le_top := by lattice.prove_default_bounds,
+  .. order_dual.lattice.semilattice_sup _,
+  .. order_dual.lattice.has_Sup _ }
+
 instance [complete_lattice α] : complete_lattice (order_dual α) :=
-{ le_Sup := @complete_lattice.Inf_le α _,
-  Sup_le := @complete_lattice.le_Inf α _,
-  Inf_le := @complete_lattice.le_Sup α _,
-  le_Inf := @complete_lattice.Sup_le α _,
-  .. order_dual.lattice.bounded_lattice α, ..order_dual.lattice.has_Sup α, ..order_dual.lattice.has_Inf α }
+{ .. order_dual.lattice.complete_semilattice_sup α,
+  .. order_dual.lattice.complete_semilattice_inf α,
+  .. order_dual.lattice.bounded_lattice α }
 
 instance [complete_linear_order α] : complete_linear_order (order_dual α) :=
 { .. order_dual.lattice.complete_lattice α, .. order_dual.decidable_linear_order α }
@@ -818,17 +914,36 @@ instance [has_Inf α] [has_Inf β] : has_Inf (α × β) :=
 instance [has_Sup α] [has_Sup β] : has_Sup (α × β) :=
 ⟨λs, (Sup (prod.fst '' s), Sup (prod.snd '' s))⟩
 
-instance [complete_lattice α] [complete_lattice β] : complete_lattice (α × β) :=
-{ le_Sup := assume s p hab, ⟨le_Sup $ mem_image_of_mem _ hab, le_Sup $ mem_image_of_mem _ hab⟩,
+instance [complete_semilattice_sup α] [complete_semilattice_sup β] : complete_semilattice_sup (α × β) :=
+{ le_Sup := assume s p hab, ⟨complete_semilattice_sup.le_Sup _ _ $ mem_image_of_mem prod.fst hab,
+                             complete_semilattice_sup.le_Sup _ _ $ mem_image_of_mem prod.snd hab⟩,
   Sup_le := assume s p h,
-    ⟨ Sup_le $ ball_image_of_ball $ assume p hp, (h p hp).1,
-      Sup_le $ ball_image_of_ball $ assume p hp, (h p hp).2⟩,
-  Inf_le := assume s p hab, ⟨Inf_le $ mem_image_of_mem _ hab, Inf_le $ mem_image_of_mem _ hab⟩,
-  le_Inf := assume s p h,
-    ⟨ le_Inf $ ball_image_of_ball $ assume p hp, (h p hp).1,
-      le_Inf $ ball_image_of_ball $ assume p hp, (h p hp).2⟩,
-  .. prod.lattice.bounded_lattice α β,
+    ⟨ complete_semilattice_sup.Sup_le _ _ $ ball_image_of_ball $ assume p hp, (h p hp).1,
+      complete_semilattice_sup.Sup_le _ _ $ ball_image_of_ball $ assume p hp, (h p hp).2⟩,
+  bot_le := λ a, ⟨bot_le,bot_le⟩,
+  le_top := λ a, ⟨le_top,le_top⟩,
+  .. prod.lattice.has_bot α β,
+  .. prod.lattice.has_top α β,
   .. prod.lattice.has_Sup α β,
+  .. prod.lattice.semilattice_sup α β,
+  }
+
+instance [complete_semilattice_inf α] [complete_semilattice_inf β] : complete_semilattice_inf (α × β) :=
+{ Inf_le := assume s p hab, ⟨complete_semilattice_inf.Inf_le _ _ $ mem_image_of_mem prod.fst hab,
+                             complete_semilattice_inf.Inf_le _ _ $ mem_image_of_mem prod.snd hab⟩,
+  le_Inf := assume s p h,
+    ⟨ complete_semilattice_inf.le_Inf _ _ $ ball_image_of_ball $ assume p hp, (h p hp).1,
+      complete_semilattice_inf.le_Inf _ _ $ ball_image_of_ball $ assume p hp, (h p hp).2⟩,
+  bot_le := λ a, ⟨bot_le,bot_le⟩,
+  le_top := λ a, ⟨le_top,le_top⟩,
+  .. prod.lattice.has_bot α β,
+  .. prod.lattice.has_top α β,
+  .. prod.lattice.semilattice_inf α β,
   .. prod.lattice.has_Inf α β }
+
+instance [complete_lattice α] [complete_lattice β] : complete_lattice (α × β) :=
+{ .. prod.lattice.complete_semilattice_inf α β,
+  .. prod.lattice.complete_semilattice_sup α β,
+  .. prod.lattice.bounded_lattice α β }
 
 end prod

@@ -254,6 +254,12 @@ theorem or_and_distrib_left : a ∨ (b ∧ c) ↔ (a ∨ b) ∧ (a ∨ c) :=
 theorem and_or_distrib_right : (a ∧ b) ∨ c ↔ (a ∨ c) ∧ (b ∨ c) :=
 (or.comm.trans or_and_distrib_left).trans (and_congr or.comm or.comm)
 
+theorem and_and_distrib_left : a ∧ (b ∧ c) ↔ (a ∧ b) ∧ (a ∧ c) :=
+by split; intros; casesm* _ ∧ _; constructor_matching* _ ∧ _; assumption
+
+theorem and_and_distrib_right : (a ∧ b) ∧ c ↔ (a ∧ c) ∧ (b ∧ c) :=
+by split; intros; casesm* _ ∧ _; constructor_matching* _ ∧ _; assumption
+
 /- iff -/
 
 theorem iff_of_true (ha : a) (hb : b) : a ↔ b :=

@@ -92,6 +92,14 @@ lemma le_of_forall_le' [preorder α] {a b : α}
   (H : ∀ c, a ≤ c → b ≤ c) : b ≤ a :=
 H _ (le_refl _)
 
+lemma le_iff_forall_le [preorder α] {a b : α} :
+  a ≤ b ↔ (∀ c, c ≤ a → c ≤ b) :=
+⟨λ h c hc, le_trans hc h, le_of_forall_le⟩
+
+lemma le_iff_forall_le' [preorder α] {a b : α} :
+  a ≤ b ↔ (∀ c, b ≤ c → a ≤ c) :=
+⟨λ h c hc, le_trans h hc, le_of_forall_le'⟩
+
 lemma le_of_forall_lt [linear_order α] {a b : α}
   (H : ∀ c, c < a → c < b) : a ≤ b :=
 le_of_not_lt $ λ h, lt_irrefl _ (H _ h)

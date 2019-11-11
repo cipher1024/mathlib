@@ -613,6 +613,9 @@ set.ext $ assume ⟨x, h⟩, by simp [h]
 lemma range_eq_Union {ι} (f : ι → α) : range f = (⋃i, {f i}) :=
 set.ext $ assume a, by simp [@eq_comm α a]
 
+lemma range_eq_univ_of_surjective {ι} {f : ι → α} (h : surjective f) : range f = univ :=
+set.ext $ assume a, by simp [h a]
+
 lemma image_eq_Union (f : α → β) (s : set α) : f '' s = (⋃i∈s, {f i}) :=
 set.ext $ assume b, by simp [@eq_comm β b]
 

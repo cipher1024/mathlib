@@ -7,6 +7,7 @@ Defines the inf/sup (semi)-lattice with optionally top/bot type class hierarchy.
 -/
 
 import order.basic
+import tactic.pi_instances
 
 set_option old_structure_cmd true
 
@@ -276,6 +277,10 @@ begin
   have II := semilattice_inf.ext H,
   resetI, cases A; cases B; injection SS; injection II; congr'
 end
+
+instance pi.lattice {α : Type u} {β : α → Type v} [∀ i, lattice (β i)] :
+  lattice (Π i, β i) :=
+by pi_instance
 
 end lattice
 

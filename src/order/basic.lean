@@ -154,6 +154,10 @@ instance (α : Type*) [decidable_linear_order α] : decidable_linear_order (orde
 
 instance : Π [inhabited α], inhabited (order_dual α) := id
 
+protected def mk (x : α) : order_dual α := x
+
+protected def unmk (x : order_dual α) : α := x
+
 end order_dual
 
 /- order instances on the function space -/
