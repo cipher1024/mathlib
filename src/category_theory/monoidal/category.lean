@@ -446,6 +446,8 @@ as_iso (braiding X Y)
 #check @triangle_assoc_comp_right
 #check @eq_comp_inv
 
+#exit
+
 lemma brainding_left_id (X : C) :
   γ_ X (𝟙_ C) ≫ (λ_ X).hom = (ρ_ X).hom :=
 begin

@@ -238,7 +238,7 @@ open has_kleisli strong_kleisli strong_functor symmetric_monoidal_category
 variables (M : C ⥤ C)
 
 def σ_  [strong_functor M] (X Y : C) : M.obj X ⊗ Y ⟶ M.obj (X ⊗ Y) :=
-B_ _ _ ≫ τ_ _ _ _ ≫ M.map (B_ _ _)
+γ_ _ _ ≫ τ_ _ _ _ ≫ M.map (γ_ _ _)
 
 def M_ [strong_monad M] (X Y : C) :
   M.obj X ⊗ M.obj Y ⟶ M.obj (X ⊗ Y) :=
@@ -247,10 +247,10 @@ def M_ [strong_monad M] (X Y : C) :
 @[reassoc]
 lemma law3 [strong_functor M] (X Y Z : C) :
   σ_ M X (Y ⊗ Z) ≫ M.map (α_ X Y Z).inv =
-  (α_ (M.obj X) Y Z).inv ≫ (σ_ M _ _ ⊗ 𝟙 _) ≫ σ_ M _ _  := _
+  (α_ (M.obj X) Y Z).inv ≫ (σ_ M _ _ ⊗ 𝟙 _) ≫ σ_ M _ _  := sorry
 
 @[reassoc]
-lemma law4 [strong_functor M] (X : C) : σ_ M X (𝟙_ _) ≫ M.map (ρ_ _).hom = (ρ_ _).hom := _
+lemma law4 [strong_functor M] (X : C) : σ_ M X (𝟙_ _) ≫ M.map (ρ_ _).hom = (ρ_ _).hom := sorry
 
 
 #check @nat_τ .
@@ -259,7 +259,7 @@ lemma law4 [strong_functor M] (X : C) : σ_ M X (𝟙_ _) ≫ M.map (ρ_ _).hom 
 
 -- @[simp, reassoc]
 -- lemma braid_map (X X' Y Y' : C) (f : X ⟶ X') (g : Y ⟶ Y') :
---   (g ⊗ f) ≫ B_ Y' X' = B_ Y X ≫ (f ⊗ g) :=
+--   (g ⊗ f) ≫ γ_ Y' X' = γ_ Y X ≫ (f ⊗ g) :=
 -- sorry
 
 local attribute [-simp] functor.map_comp nat_trans.naturality
@@ -285,7 +285,7 @@ by simp [σ_]
 
 -- #print nat_σ_assoc
 class commutative_strong_monad (M : C ⥤ C) [strong_monad M] :=
--- (str_def : ∀ X Y, B_ _ _ ≫ τ M X Y = σ M _ _ ≫ M.map (B_ _ _))
+-- (str_def : ∀ X Y, γ_ _ _ ≫ τ M X Y = σ M _ _ ≫ M.map (γ_ _ _))
 (foob : ∀ X Y, τ_ M X Y = ((η_ M).app _ ⊗ 𝟙 _) ≫ M_ M _ _)
 
 namespace commutative_strong_monad
@@ -295,14 +295,14 @@ namespace commutative_strong_monad
 variables {M} [strong_monad M] [commutative_strong_monad M]
 variables {X Y Z : C} (f : M.obj Y ⟶ M.obj Z)
 
--- lemma str_def' : τ M X Y = B_ _ _ ≫ σ M _ _ ≫ M.map (B_ _ _) :=
+-- lemma str_def' : τ M X Y = γ_ _ _ ≫ σ M _ _ ≫ M.map (γ_ _ _) :=
 -- by rw [← str_def,braiding_inv_assoc]
 
 #check functor.map_comp
 
 -- attribute [reassoc] nat_trans.naturality
 #check functor.map_comp
-lemma str_μ : M_ M _ _ = B_ _ _ ≫ τ_ _ _ _ ≫ M.map (σ_ _ _ _) ≫ (μ_ M).app (X ⊗ Y) ≫ M.map (B_ _ _) :=
+lemma str_μ : M_ M _ _ = γ_ _ _ ≫ τ_ _ _ _ ≫ M.map (σ_ _ _ _) ≫ (μ_ M).app (X ⊗ Y) ≫ M.map (γ_ _ _) :=
 -- by rw [M_,str_def',foob,M_,← nat_σ]
 begin
   rw [M_,σ_,σ_,← nat_trans.naturality],
@@ -317,13 +317,14 @@ variables {X Y Z : C} (f : M.obj Y ⟶ M.obj Z)
 
 -- def M_ : M.obj X ⊗ M.obj Y ⟶ M.obj (X ⊗ Y) := σ_ _ _ _ ≫ bind' (τ_ M X Y)
 
--- lemma braid_τ : B_ _ _ ≫ τ M X Y = σ M _ _ ≫ M.map (B_ _ _) := sorry
--- lemma braid_σ : B_ _ _ ≫ σ M X Y = τ M _ _ ≫ M.map (B_ _ _) := sorry
+-- lemma braid_τ : γ_ _ _ ≫ τ M X Y = σ M _ _ ≫ M.map (γ_ _ _) := sorry
+-- lemma braid_σ : γ_ _ _ ≫ σ M X Y = τ M _ _ ≫ M.map (γ_ _ _) := sorry
 
--- #check B_ _ _ ≫ σ M X Y
+-- #check γ_ _ _ ≫ σ M X Y
 
 lemma M_def : σ_ _ _ _ ≫ bind' (τ_ _ _ _) = τ_ M _ _ ≫ bind' (σ_ M X Y) :=
-by rw [σ_]
+sorry
+-- by rw [σ_]
 
 end strong_kleisli
 
@@ -333,7 +334,7 @@ end strong_kleisli
 -- local attribute [-simp] functor.map_comp nat_trans.naturality
 -- local attribute [simp] functor.map_comp_symm functor.map_comp_symm_assoc nat_trans.naturality_symm nat_trans.naturality_symm_assoc
 
-
+#exit
 --  [strong_functor T]
 instance (T : C ⥤ C) [strong_kleisli T] : lax_monoidal_functor T :=
 { ε := pure _ _,

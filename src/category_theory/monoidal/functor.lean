@@ -94,7 +94,7 @@ variables {D : Type u₂} [category.{v₂} D] [𝒟 : monoidal_category.{v₂} D
 include 𝒞 𝒟
 
 /-- The tensorator as a natural isomorphism. -/
-def μ_nat_iso (F : C ⥤ D) [monoidal_functor.{v₁+1 v₂+1} F] :
+def μ_nat_iso (F : C ⥤ D) [monoidal_functor.{v₁ v₂} F] :
   (functor.prod F F) ⋙ (tensor D) ≅ (tensor C) ⋙ F :=
 nat_iso.of_components
   (by { intros, apply μ_iso F })

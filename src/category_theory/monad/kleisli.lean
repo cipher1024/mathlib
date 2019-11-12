@@ -136,9 +136,7 @@ omit F LF
 instance functor.of_types.monad {m} [I : _root_.monad m] [is_lawful_functor m] : _root_.monad (functor.of_types m).obj := I
 instance functor.of_types.is_lawful_monad {m} [_root_.monad m] [I : is_lawful_monad m] : is_lawful_monad (functor.of_types m).obj := I
 
-#check map_eq_bind_pure_comp
-
-instance is_lawful_monad.to_kleisli {m} [_root_.monad m] [is_lawful_monad m] : has_kleisli.{u₁+1 u₁+1} (functor.of_types m) :=
+instance is_lawful_monad.to_kleisli {m} [_root_.monad m] [is_lawful_monad m] : has_kleisli.{u₁ u₁+1} (functor.of_types.{u₁} m) :=
 { pure := λ X x, pure x,
   bind' := λ X Y (f : X → m Y) (a : m X), (a >>= f : m Y),
   pure_bind := by simp [(≫),(∘)],
@@ -179,7 +177,7 @@ local attribute [simp] fish is_lawful_monad.bind_assoc map_bind seq_bind_eq
 
 set_option pp.universes true
 
-def types.kleisli (m : Type* → Type*) [_root_.monad m] [is_lawful_monad m] : has_kleisli.{u₁+1 u₁+1} (functor.of_types m) :=
+def types.kleisli (m : Type* → Type*) [_root_.monad m] [is_lawful_monad m] : has_kleisli.{u₁ u₁+1} (functor.of_types m) :=
 { pure := λ X x, has_pure.pure x,
   bind' := λ X Y (f : X → m Y), id >=> f }
 
@@ -325,7 +323,7 @@ attribute [reassoc] pure_eq
 
 lemma μ_eq (X : C) :
   F.map ((μ_ (M F N)).app X) ≫ (types F N).hom.app _ = (types F N).hom.app _ ≫ N.map ((types F N).hom.app _) ≫ (μ_ N).app (F.obj X) :=
-by simp [μ_eq_bind,bind_eq]; erw comp_id; simp [bind_nat_b]
+by { sorry } -- rw bind_eq, simp  [bind_eq], done, erw comp_id; simp [bind_nat_b] }
 
 open reified_monad reified_functor
 

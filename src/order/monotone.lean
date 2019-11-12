@@ -143,7 +143,7 @@ instance {α β} [partial_order α] [partial_order β] : partial_order (α →�
   .. Mono.preorder }
 
 def comp (f : β →ₘ γ) (g : α →ₘ β) : α →ₘ γ :=
-{ F := f ∘ g, mono' := ⟨ monotone_comp g.mono f.mono ⟩ }
+{ F := f ∘ g, mono' := ⟨ monotone.comp f.mono g.mono ⟩ }
 
 infixr ∘ := comp
 
@@ -244,7 +244,7 @@ lemma coe_to_fun_fst_eq_snd' : f'.fst' x y = f'.snd' y x := rfl
 
 end coe_to_fun_proj
 
-@[extensionality]
+@[ext]
 lemma ext {g : α →ₘ β} (h : ∀ x, f x = g x) : f = g :=
 by { casesm* _ →ₘ _, suffices : f_F = g_F, subst this, ext, apply h }
 
@@ -262,11 +262,11 @@ namespace Mono
 variables {α : Type*} {β : α → Type*} (γ : Π a, β a → Type*)
 variables [Π a b, preorder $ γ a b]
 
-def curry : (Π a : sigma β, γ a.1 a.2) →ₘ (Π a b, γ a b) := Mono.mk function.curry' (monotone_curry' _ _ _)
-def uncurry : (Π a b, γ a b) →ₘ (Π a : sigma β, γ a.1 a.2) := Mono.mk function.uncurry' (monotone_uncurry' _ _ _)
-open function (curry' uncurry')
+def curry : (Π a : sigma β, γ a.1 a.2) →ₘ (Π a b, γ a b) := Mono.mk function.dcurry (monotone_curry' _ _ _)
+def uncurry : (Π a b, γ a b) →ₘ (Π a : sigma β, γ a.1 a.2) := Mono.mk function.duncurry (monotone_uncurry' _ _ _)
+open function (dcurry duncurry)
 
-@[simp] lemma coe_to_fun_curry (f : Π a : sigma β, γ a.1 a.2) : curry γ f = curry' f := rfl
-@[simp] lemma coe_to_fun_uncurry (f : Π a b, γ a b) : uncurry γ f = uncurry' f := rfl
+@[simp] lemma coe_to_fun_curry (f : Π a : sigma β, γ a.1 a.2) : curry γ f = dcurry f := rfl
+@[simp] lemma coe_to_fun_uncurry (f : Π a b, γ a b) : uncurry γ f = duncurry f := rfl
 
 end Mono

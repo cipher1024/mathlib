@@ -65,7 +65,7 @@ instance : preorder (chain α) :=
     ⟨_,hy.fst,le_trans hw.snd hy.snd⟩,
   le_refl := λ a x hx, ⟨_,hx,le_refl _⟩ }
 
-@[extensionality]
+@[ext]
 lemma ext (h : ∀ i, c.nth i = c'.nth i) : c = c' :=
 by cases c; cases c'; congr; ext; apply h
 

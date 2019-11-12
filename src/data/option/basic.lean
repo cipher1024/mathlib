@@ -25,10 +25,6 @@ theorem get_of_mem {a : α} : ∀ {o : option α} (h : is_some o), a ∈ o → o
 theorem mem_unique {o : option α} {a b : α} (ha : a ∈ o) (hb : b ∈ o) : a = b :=
 option.some.inj $ ha.symm.trans hb
 
-@[simp]
-lemma some_get : Π {o : option α} (h : o.is_some), some (get h) = o
-| (some x) rfl := rfl
-
 theorem injective_some (α : Type*) : function.injective (@some α) :=
 λ _ _, some_inj.mp
 

@@ -258,9 +258,6 @@ protected theorem sub_lt_left_iff_lt_add (H : n ≤ k) : k - n < m ↔ k < n + m
 protected theorem le_sub_left_iff_add_le (H : m ≤ k) : n ≤ k - m ↔ m + n ≤ k :=
 le_iff_le_iff_lt_iff_lt.2 (nat.sub_lt_left_iff_lt_add H)
 
-protected theorem lt_of_add_lt_add_right {k n m : ℕ} (h : n + k < m + k) : n < m :=
-by rw [nat.add_comm n,nat.add_comm m] at h; exact lt_of_add_lt_add_left h
-
 protected theorem le_sub_right_iff_add_le (H : n ≤ k) : m ≤ k - n ↔ m + n ≤ k :=
 by rw [nat.le_sub_left_iff_add_le H, add_comm]
 
@@ -550,11 +547,11 @@ lemma succ_div : ∀ (a b : ℕ), (a + 1) / b =
     simp [hba, hb_le_a1, hb_dvd_a], }
 end
 
-lemma succ_div_of_dvd {a b : ℕ} (hba : b ∣ a + 1) : 
+lemma succ_div_of_dvd {a b : ℕ} (hba : b ∣ a + 1) :
   (a + 1) / b = a / b + 1 :=
 by rw [succ_div, if_pos hba]
 
-lemma succ_div_of_not_dvd {a b : ℕ} (hba : ¬ b ∣ a + 1) : 
+lemma succ_div_of_not_dvd {a b : ℕ} (hba : ¬ b ∣ a + 1) :
   (a + 1) / b = a / b :=
 by rw [succ_div, if_neg hba, add_zero]
 

@@ -205,11 +205,11 @@ section monotone
 variables (α)
 
 lemma monotone_curry' (β : α → Type*) (γ : Π a : α, β a → Type*)
-  [∀ x y, preorder $ γ x y] : monotone $ @curry' α β γ :=
+  [∀ x y, preorder $ γ x y] : monotone $ @dcurry α β γ :=
 λ x y h a b, h ⟨a,b⟩
 
 lemma monotone_uncurry' (β : α → Type*) (γ : Π a : α, β a → Type*)
-  [∀ x y, preorder $ γ x y] : monotone $ @uncurry' α β γ :=
+  [∀ x y, preorder $ γ x y] : monotone $ @duncurry α β γ :=
 λ x y h a, h a.1 a.2
 
 end monotone
